@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Quay số trúng thưởng</title>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0"
+    />
+    <!-- <link rel="stylesheet" href="./index.css"> -->
+  </head>
+
+  <body>
+    <script src="./lib/three.min.js"></script>
+    <script src="./lib/tween.min.js"></script>
+    <script src="./lib/TrackballControls.js"></script>
+    <script src="./lib/CSS3DRenderer.js"></script>
+    <script src="./lib/ajax.js"></script>
+
+    <div class="canvas-box">
+      <canvas id="canvas">Trình duyệt của bạn không hỗ trợ canvas</canvas>
+    </div>
+
+    <div class="music">
+      <audio id="music" src="./data/music.mp3" class="music-item" loop></audio>
+      <div id="musicBox" class="music-box" title="Phát/Tạm dừng nhạc nền">Music</div>
+    </div>
+
+    <div id="prizeBar"></div>
+
+    <div id="container"></div>
+
+    <div id="menu">
+      <button id="enter">Vào quay số</button>
+      <div id="lotteryBar" class="none">
+        <button id="lottery">Bắt đầu quay</button>
+        <button id="reLottery">Quay lại</button>
+        <div class="fixed-bar">
+          <button id="save" class="fixed-btn">Xuất kết quả</button>
+          <button id="reset" class="fixed-btn">Đặt lại</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="qipao-container"></div>
+  </body>
+</html>

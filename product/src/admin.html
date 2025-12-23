@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Quay số</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #DA251D 0%, #FFCD00 50%, #DA251D 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            color: #DA251D;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #FFCD00;
+        }
+
+        .tab {
+            padding: 15px 30px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #666;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            color: #DA251D;
+            border-bottom-color: #DA251D;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        input[type="file"],
+        input[type="text"],
+        input[type="number"],
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        input:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #DA251D;
+        }
+
+        button {
+            background: linear-gradient(135deg, #DA251D 0%, #FF6B5A 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(218, 37, 29, 0.3);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(218, 37, 29, 0.5);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #FFCD00 0%, #FFE066 100%);
+            color: #DA251D;
+        }
+
+        .prize-list {
+            margin-top: 20px;
+        }
+
+        .prize-item {
+            background: #f9f9f9;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border-left: 4px solid #DA251D;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .prize-item button {
+            padding: 8px 20px;
+            font-size: 0.9em;
+        }
+
+        .message {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .message.show {
+            display: block;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #FFCD00 0%, #FFE066 100%);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            color: #DA251D;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-card h3 {
+            font-size: 2em;
+            margin-bottom: 5px;
+        }
+
+        .stat-card p {
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏆 Quản lý Quay số Trúng thưởng</h1>
+
+        <div class="message" id="message"></div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('users')">👥 Quản lý Người tham gia</button>
+            <button class="tab" onclick="switchTab('prizes')">🎁 Quản lý Giải thưởng</button>
+            <button class="tab" onclick="switchTab('stats')">📊 Thống kê</button>
+        </div>
+
+        <!-- Tab Quản lý Người tham gia -->
+        <div id="users" class="tab-content active">
+            <h2>Import danh sách người tham gia</h2>
+            <form id="userForm">
+                <div class="form-group">
+                    <label for="userFile">Chọn file Excel (.xlsx)</label>
+                    <input type="file" id="userFile" accept=".xlsx" required>
+                    <small>File Excel phải có cột: Mã nhân viên, Họ tên, Phòng ban</small>
+                </div>
+                <button type="submit">📤 Import Người tham gia</button>
+            </form>
+
+            <div class="stats" id="userStats">
+                <div class="stat-card">
+                    <h3 id="totalUsers">0</h3>
+                    <p>Tổng người tham gia</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="luckyUsers">0</h3>
+                    <p>Đã trúng thưởng</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="leftUsers">0</h3>
+                    <p>Còn lại</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Quản lý Giải thưởng -->
+        <div id="prizes" class="tab-content">
+            <h2>Quản lý Giải thưởng</h2>
+            <form id="prizeForm">
+                <div class="form-group">
+                    <label for="prizeText">Tên giải thưởng</label>
+                    <input type="text" id="prizeText" placeholder="Ví dụ: Giải nhất" required>
+                </div>
+                <div class="form-group">
+                    <label for="prizeTitle">Mô tả giải thưởng</label>
+                    <input type="text" id="prizeTitle" placeholder="Ví dụ: Mac Pro" required>
+                </div>
+                <div class="form-group">
+                    <label for="prizeCount">Số lượng</label>
+                    <input type="number" id="prizeCount" min="1" required>
+                </div>
+                <div class="form-group">
+                    <label for="prizeImg">URL hình ảnh</label>
+                    <input type="text" id="prizeImg" placeholder="../img/prize.jpg">
+                </div>
+                <button type="submit">➕ Thêm Giải thưởng</button>
+            </form>
+
+            <div class="prize-list" id="prizeList"></div>
+        </div>
+
+        <!-- Tab Thống kê -->
+        <div id="stats" class="tab-content">
+            <h2>Thống kê Quay số</h2>
+            <div class="stats">
+                <div class="stat-card">
+                    <h3 id="totalPrizes">0</h3>
+                    <p>Tổng số giải</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="drawnPrizes">0</h3>
+                    <p>Đã quay</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="remainingPrizes">0</h3>
+                    <p>Còn lại</p>
+                </div>
+            </div>
+            <button class="btn-secondary" onclick="exportResults()">📥 Xuất kết quả Excel</button>
+            <button class="btn-secondary" onclick="resetAll()" style="margin-left: 10px;">🔄 Đặt lại tất cả</button>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+        }
+
+        function showMessage(text, type = 'success') {
+            const message = document.getElementById('message');
+            message.textContent = text;
+            message.className = `message ${type} show`;
+            setTimeout(() => {
+                message.classList.remove('show');
+            }, 3000);
+        }
+
+        // Import users
+        document.getElementById('userForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const fileInput = document.getElementById('userFile');
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            try {
+                const response = await fetch('/api/uploadUsers', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                if (data.success) {
+                    showMessage('Import thành công!');
+                    loadStats();
+                } else {
+                    showMessage('Import thất bại: ' + data.error, 'error');
+                }
+            } catch (error) {
+                showMessage('Lỗi: ' + error.message, 'error');
+            }
+        });
+
+        // Add prize
+        document.getElementById('prizeForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const prize = {
+                text: document.getElementById('prizeText').value,
+                title: document.getElementById('prizeTitle').value,
+                count: parseInt(document.getElementById('prizeCount').value),
+                img: document.getElementById('prizeImg').value || '../img/default.jpg'
+            };
+
+            try {
+                const response = await fetch('/api/addPrize', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(prize)
+                });
+                const data = await response.json();
+                if (data.success) {
+                    showMessage('Thêm giải thưởng thành công!');
+                    document.getElementById('prizeForm').reset();
+                    loadPrizes();
+                } else {
+                    showMessage('Thất bại: ' + data.error, 'error');
+                }
+            } catch (error) {
+                showMessage('Lỗi: ' + error.message, 'error');
+            }
+        });
+
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/stats');
+                const data = await response.json();
+                document.getElementById('totalUsers').textContent = data.totalUsers || 0;
+                document.getElementById('luckyUsers').textContent = data.luckyUsers || 0;
+                document.getElementById('leftUsers').textContent = data.leftUsers || 0;
+                document.getElementById('totalPrizes').textContent = data.totalPrizes || 0;
+                document.getElementById('drawnPrizes').textContent = data.drawnPrizes || 0;
+                document.getElementById('remainingPrizes').textContent = data.remainingPrizes || 0;
+            } catch (error) {
+                console.error('Lỗi load stats:', error);
+            }
+        }
+
+        async function loadPrizes() {
+            try {
+                const response = await fetch('/api/getPrizes');
+                const data = await response.json();
+                const prizeList = document.getElementById('prizeList');
+                prizeList.innerHTML = '';
+                data.prizes.forEach((prize, index) => {
+                    if (prize.type === 0) return; // Skip special prize
+                    const div = document.createElement('div');
+                    div.className = 'prize-item';
+                    div.innerHTML = `
+                        <div>
+                            <strong>${prize.text}</strong> - ${prize.title} (${prize.count} giải)
+                        </div>
+                        <button onclick="deletePrize(${prize.type})">Xóa</button>
+                    `;
+                    prizeList.appendChild(div);
+                });
+            } catch (error) {
+                console.error('Lỗi load prizes:', error);
+            }
+        }
+
+        async function deletePrize(type) {
+            if (!confirm('Bạn có chắc muốn xóa giải thưởng này?')) return;
+            try {
+                const response = await fetch(`/api/deletePrize/${type}`, { method: 'DELETE' });
+                const data = await response.json();
+                if (data.success) {
+                    showMessage('Xóa thành công!');
+                    loadPrizes();
+                }
+            } catch (error) {
+                showMessage('Lỗi: ' + error.message, 'error');
+            }
+        }
+
+        async function exportResults() {
+            try {
+                const response = await fetch('/export', { method: 'POST' });
+                const data = await response.json();
+                if (data.type === 'success') {
+                    window.location.href = data.url;
+                    showMessage('Xuất file thành công!');
+                }
+            } catch (error) {
+                showMessage('Lỗi: ' + error.message, 'error');
+            }
+        }
+
+        async function resetAll() {
+            if (!confirm('Bạn có chắc muốn đặt lại tất cả dữ liệu? Hành động này không thể hoàn tác!')) return;
+            try {
+                const response = await fetch('/reset', { method: 'POST' });
+                const data = await response.json();
+                if (data.type === 'success') {
+                    showMessage('Đặt lại thành công!');
+                    loadStats();
+                }
+            } catch (error) {
+                showMessage('Lỗi: ' + error.message, 'error');
+            }
+        }
+
+        // Load initial data
+        loadStats();
+        loadPrizes();
+    </script>
+</body>
+</html>
+

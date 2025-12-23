@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Màn hình Hiển thị Quay số</title>
+    <link rel="stylesheet" href="./lottery/index.css">
+    <style>
+        body {
+            overflow: hidden;
+        }
+
+        .display-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1000;
+            pointer-events: none;
+        }
+
+        .winner-display {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, rgba(255, 205, 0, 0.95) 0%, rgba(255, 230, 102, 0.95) 100%);
+            padding: 40px 60px;
+            border-radius: 20px;
+            border: 5px solid #DA251D;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            display: none;
+            z-index: 1001;
+            animation: winnerPop 0.5s ease-out;
+        }
+
+        .winner-display.show {
+            display: block;
+        }
+
+        @keyframes winnerPop {
+            0% {
+                transform: translate(-50%, -50%) scale(0.5);
+                opacity: 0;
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
+        }
+
+        .winner-display h2 {
+            color: #DA251D;
+            font-size: 3em;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .winner-display .prize-name {
+            color: #DA251D;
+            font-size: 2em;
+            margin-bottom: 30px;
+            font-weight: bold;
+        }
+
+        .winner-display .winner-names {
+            color: #DA251D;
+            font-size: 2.5em;
+            font-weight: bold;
+            line-height: 1.5;
+        }
+
+        .fullscreen-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1002;
+            background: linear-gradient(135deg, #DA251D 0%, #FF6B5A 100%);
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(218, 37, 29, 0.3);
+        }
+
+        .fullscreen-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(218, 37, 29, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <button class="fullscreen-btn" onclick="toggleFullscreen()">⛶ Toàn màn hình</button>
+    
+    <div class="display-overlay">
+        <div class="winner-display" id="winnerDisplay">
+            <h2>🎉 CHÚC MỪNG 🎉</h2>
+            <div class="prize-name" id="prizeName"></div>
+            <div class="winner-names" id="winnerNames"></div>
+        </div>
+    </div>
+
+    <!-- Original lottery display -->
+    <div class="canvas-box">
+        <canvas id="canvas">Trình duyệt của bạn không hỗ trợ canvas</canvas>
+    </div>
+
+    <div class="music">
+        <audio id="music" src="./data/music.mp3" class="music-item" loop></audio>
+        <div id="musicBox" class="music-box" title="Phát/Tạm dừng nhạc nền">Music</div>
+    </div>
+
+    <div id="prizeBar"></div>
+    <div id="container"></div>
+    <div id="menu">
+        <button id="enter">Vào quay số</button>
+        <div id="lotteryBar" class="none">
+            <button id="lottery">Bắt đầu quay</button>
+            <button id="reLottery">Quay lại</button>
+            <div class="fixed-bar">
+                <button id="save" class="fixed-btn">Xuất kết quả</button>
+                <button id="reset" class="fixed-btn">Đặt lại</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="qipao-container"></div>
+
+    <script src="./lib/three.min.js"></script>
+    <script src="./lib/tween.min.js"></script>
+    <script src="./lib/TrackballControls.js"></script>
+    <script src="./lib/CSS3DRenderer.js"></script>
+    <script src="./lib/ajax.js"></script>
+    <script type="module" src="./lottery/index.js"></script>
+
+    <script>
+        let ws = null;
+
+        function connectWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const port = window.location.port || (protocol === 'wss:' ? 443 : 8090);
+            const wsUrl = `${protocol}//${window.location.hostname}:${port}`;
+            
+            ws = new WebSocket(wsUrl);
+
+            ws.onopen = () => {
+                console.log('Display WebSocket connected');
+            };
+
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                handleWebSocketMessage(data);
+            };
+
+            ws.onclose = () => {
+                console.log('Display WebSocket disconnected');
+                setTimeout(connectWebSocket, 3000);
+            };
+
+            ws.onerror = (error) => {
+                console.error('WebSocket error:', error);
+            };
+        }
+
+        function handleWebSocketMessage(data) {
+            switch(data.type) {
+                case 'command':
+                    handleCommand(data.action);
+                    break;
+                case 'winner':
+                    showWinner(data.winners, data.prize);
+                    break;
+            }
+        }
+
+        function handleCommand(action) {
+            // Forward commands to the lottery system
+            const event = new CustomEvent('lotteryCommand', { detail: { action } });
+            window.dispatchEvent(event);
+        }
+
+        function showWinner(winners, prize) {
+            const display = document.getElementById('winnerDisplay');
+            const prizeName = document.getElementById('prizeName');
+            const winnerNames = document.getElementById('winnerNames');
+
+            prizeName.textContent = prize ? `${prize.text} - ${prize.title}` : '';
+            winnerNames.textContent = winners.map(w => w[1]).join('、');
+
+            display.classList.add('show');
+
+            setTimeout(() => {
+                display.classList.remove('show');
+            }, 5000);
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        // Initialize WebSocket
+        connectWebSocket();
+    </script>
+</body>
+</html>
+

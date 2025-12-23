@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Điều khiển Quay số</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #DA251D 0%, #FFCD00 50%, #DA251D 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            color: #DA251D;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2em;
+        }
+
+        .status {
+            text-align: center;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .status.connected {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status.disconnected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .current-prize {
+            background: linear-gradient(135deg, #FFCD00 0%, #FFE066 100%);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 30px;
+            color: #DA251D;
+        }
+
+        .current-prize h2 {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+
+        .current-prize p {
+            font-size: 1.2em;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            background: linear-gradient(135deg, #DA251D 0%, #FF6B5A 100%);
+            color: white;
+            border: none;
+            padding: 20px;
+            border-radius: 10px;
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(218, 37, 29, 0.3);
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(218, 37, 29, 0.5);
+        }
+
+        button:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #FFCD00 0%, #FFE066 100%);
+            color: #DA251D;
+            font-size: 1.5em;
+            padding: 25px;
+        }
+
+        .btn-primary:active:not(:disabled) {
+            animation: pulse 0.3s;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(0.95); }
+            100% { transform: scale(1); }
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+        }
+
+        .info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .info p {
+            margin: 5px 0;
+            color: #666;
+        }
+
+        .display-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .display-link a {
+            color: #DA251D;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 Điều khiển Quay số</h1>
+
+        <div id="status" class="status disconnected">Đang kết nối...</div>
+
+        <div class="current-prize" id="currentPrize">
+            <h2>Giải hiện tại</h2>
+            <p id="prizeName">Đang tải...</p>
+            <p id="prizeCount" style="font-size: 0.9em; margin-top: 10px;">Còn lại: 0</p>
+        </div>
+
+        <div class="controls">
+            <button id="enterBtn" onclick="sendCommand('enter')">Vào Quay số</button>
+            <button id="startBtn" class="btn-primary" onclick="sendCommand('start')">🎲 BẮT ĐẦU QUAY</button>
+            <button id="stopBtn" onclick="sendCommand('stop')" disabled>Dừng Quay</button>
+            <button id="resetBtn" onclick="sendCommand('reset')">Đặt lại</button>
+            <button id="saveBtn" onclick="sendCommand('save')">Lưu kết quả</button>
+            <button id="reLotteryBtn" onclick="sendCommand('reLottery')">Quay lại</button>
+        </div>
+
+        <div class="info">
+            <p><strong>Hướng dẫn:</strong></p>
+            <p>• Nhấn "BẮT ĐẦU QUAY" để bắt đầu quay số</p>
+            <p>• Nhấn "Dừng Quay" để dừng quay số</p>
+            <p>• Nhấn "Lưu kết quả" để lưu kết quả đã quay</p>
+            <p>• Mở màn hình hiển thị trên thiết bị khác để xem</p>
+        </div>
+
+        <div class="display-link">
+            <a href="/" target="_blank">📺 Mở màn hình quay số (http://localhost:9000/)</a>
+        </div>
+    </div>
+
+    <script>
+        let ws = null;
+        let reconnectInterval = null;
+
+        function connect() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            // Kết nối đến server backend (port 18888 trong dev, 8090 trong production)
+            const port = window.location.port === '9000' ? 18888 : (window.location.port || 8090);
+            const wsUrl = `${protocol}//${window.location.hostname}:${port}`;
+            
+            console.log('Controller connecting to WebSocket:', wsUrl);
+            ws = new WebSocket(wsUrl);
+
+            ws.onopen = () => {
+                updateStatus(true);
+                console.log('WebSocket connected');
+                // Clear any pending reconnection
+                if (reconnectInterval) {
+                    clearTimeout(reconnectInterval);
+                    reconnectInterval = null;
+                }
+            };
+
+            ws.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    handleMessage(data);
+                } catch (error) {
+                    console.error('Error parsing WebSocket message:', error);
+                }
+            };
+
+            ws.onclose = () => {
+                updateStatus(false);
+                console.log('WebSocket disconnected');
+                // Clear existing reconnection if any
+                if (reconnectInterval) {
+                    clearTimeout(reconnectInterval);
+                }
+                // Reconnect after 3 seconds
+                reconnectInterval = setTimeout(connect, 3000);
+            };
+
+            ws.onerror = (error) => {
+                console.error('WebSocket error:', error);
+                updateStatus(false);
+            };
+        }
+
+        function updateStatus(connected) {
+            const status = document.getElementById('status');
+            if (connected) {
+                status.textContent = '✅ Đã kết nối';
+                status.className = 'status connected';
+            } else {
+                status.textContent = '❌ Mất kết nối - Đang thử kết nối lại...';
+                status.className = 'status disconnected';
+            }
+        }
+
+        function sendCommand(command) {
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                alert('Chưa kết nối đến server!');
+                return;
+            }
+
+            ws.send(JSON.stringify({ type: 'command', action: command }));
+        }
+
+        function handleMessage(data) {
+            switch(data.type) {
+                case 'prizeUpdate':
+                    updatePrizeInfo(data.prize);
+                    break;
+                case 'status':
+                    updateButtons(data.status);
+                    break;
+                case 'error':
+                    alert('Lỗi: ' + data.message);
+                    break;
+            }
+        }
+
+        function updatePrizeInfo(prize) {
+            document.getElementById('prizeName').textContent = prize ? `${prize.text} - ${prize.title}` : 'Chưa có giải';
+            document.getElementById('prizeCount').textContent = prize ? `Còn lại: ${prize.count}` : '';
+        }
+
+        function updateButtons(status) {
+            document.getElementById('startBtn').disabled = status.isLotting;
+            document.getElementById('stopBtn').disabled = !status.isLotting;
+        }
+
+        // Load initial prize info
+        async function loadPrizeInfo() {
+            try {
+                const response = await fetch('/getTempData', { method: 'POST' });
+                const data = await response.json();
+                if (data.cfgData && data.cfgData.prizes) {
+                    const currentPrize = data.cfgData.prizes[data.cfgData.prizes.length - 1];
+                    updatePrizeInfo(currentPrize);
+                }
+            } catch (error) {
+                console.error('Error loading prize info:', error);
+            }
+        }
+
+        // Initialize
+        connect();
+        loadPrizeInfo();
+
+        // Keep connection alive
+        setInterval(() => {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ type: 'ping' }));
+            }
+        }, 30000);
+    </script>
+</body>
+</html>
+
