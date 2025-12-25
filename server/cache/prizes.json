@@ -1,0 +1,45 @@
+{
+  "prizes": [
+    {
+      "type": 0,
+      "count": 1000,
+      "title": "",
+      "text": "Giải đặc biệt"
+    },
+    {
+      "type": 1,
+      "count": 1,
+      "text": "Đặc biệt",
+      "title": "Quà tặng bí mật",
+      "img": "../img/secrit.jpg"
+    },
+    {
+      "type": 2,
+      "count": 2,
+      "text": "Giải nhì",
+      "title": "Mac Pro",
+      "img": "../img/mbp.jpg"
+    },
+    {
+      "type": 3,
+      "count": 3,
+      "text": "Giải ba",
+      "title": "Huawei Mate30",
+      "img": "../img/huawei.png"
+    },
+    {
+      "type": 4,
+      "count": 15,
+      "text": "Giải tư",
+      "title": "Ipad Mini5",
+      "img": "../img/ipad.jpg"
+    }
+  ],
+  "EACH_COUNT": [
+    1,
+    1,
+    1,
+    1,
+    3
+  ]
+}

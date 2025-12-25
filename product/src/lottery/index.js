@@ -41,6 +41,181 @@ let camera,
 
 let rotateObj;
 
+let ticker = {
+  el: null,
+  track: null,
+  items: [],
+  raf: null,
+  running: false,
+  speed: 28,
+  stopAfter: 0,
+  stopAt: 0,
+  winner: null
+};
+
+let tickerLive = {
+  el: null,
+  listEl: null,
+  active: false
+};
+
+function initTickerLive() {
+  if (tickerLive.el) return;
+
+
+  const list = document.createElement('div');
+  list.id = 'tickerLiveList';
+  list.style.cssText = [
+    'position:fixed',
+    'left:50%',
+    'top:50%',
+    'max-height:40vh',
+    'overflow:hidden',
+    'transform:translate(-50%,-50%)',
+    'z-index:7',
+    'pointer-events:none',
+    'display:flex',
+    'gap:12px',
+    'flex-wrap:wrap',
+    'justify-content:center',
+    'max-width:min(1100px,calc(100vw - 80px))',
+    'padding:0 18px',
+    'opacity:0',
+    'transition:opacity 120ms ease'
+  ].join(';');
+  document.body.appendChild(list);
+  tickerLive.listEl = list;
+}
+
+function resetTickerLive() {
+  // clear ticker list
+  
+}
+
+function setTickerLiveActive(active) {
+  initTickerLive();
+  tickerLive.active = !!active;
+  if (tickerLive.el) {
+    tickerLive.el.style.opacity = active ? '1' : '0';
+  }
+  if (tickerLive.listEl) {
+    tickerLive.listEl.style.opacity = active ? '1' : '0';
+  }
+}
+
+function formatUserLine(u) {
+  if (!u) return '';
+  const dept = u[2] ? ` · ${u[2]}` : '';
+  return `${u[1]} · ${u[0]}${dept}`;
+}
+
+function getTickerNearestUserIds(count) {
+  const maxPerDraw = Math.max(1, count | 0);
+  const leftPrizeCount = currentPrize
+    ? (currentPrize.count - ((basicData.luckyUsers[currentPrize.type] || []).length || 0))
+    : 0;
+  const maxAllowed = Math.max(1, Math.min(maxPerDraw, basicData.leftUsers.length || 0, leftPrizeCount || 0));
+  const n = maxAllowed;
+  if (!ticker.items || ticker.items.length === 0) return [];
+  const centerX = getTickerCenterX();
+  const scored = ticker.items.map((el) => {
+    const x = parseFloat(el.dataset.x || '0');
+    const w = el.offsetWidth || 0;
+    const itemCenter = x + w / 2;
+    const dist = Math.abs(itemCenter - centerX);
+    const id = el.dataset && el.dataset.userId ? el.dataset.userId : el.textContent;
+    return { id, dist };
+  });
+  scored.sort((a, b) => a.dist - b.dist);
+  const out = [];
+  const seen = new Set();
+  for (const s of scored) {
+    const key = String(s.id || '');
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    out.push(key);
+    if (out.length >= n) break;
+  }
+  return out;
+}
+
+function setTickerLiveList(ids) {
+  if (!tickerLive.active) return;
+  if (!tickerLive.listEl) return;
+  tickerLive.listEl.innerHTML = '';
+
+  const resolved = ids
+    .map((id) => {
+      const u = basicData.leftUsers.find(x => x && String(x[0]) === String(id)) ||
+        basicData.users.find(x => x && String(x[0]) === String(id));
+      return u ? formatUserLine(u) : String(id);
+    })
+    .filter(Boolean);
+
+  for (const text of resolved) {
+    const chip = document.createElement('div');
+    chip.style.cssText = [
+      'padding:10px 16px',
+      'border-radius:14px',
+      'font-size:2.2vh',
+      'font-weight:900',
+      'color:rgba(255,255,255,0.96)',
+      'background:linear-gradient(135deg, rgba(0,170,184,0.85) 0%, rgba(0,124,138,0.78) 100%)',
+      'backdrop-filter:blur(10px)',
+      'border:1px solid rgba(255,255,255,0.20)',
+      'box-shadow:0 12px 30px rgba(0,0,0,0.28)',
+      'max-width:46vw',
+      'overflow:hidden',
+      'text-overflow:ellipsis',
+      'white-space:nowrap'
+    ].join(';');
+    chip.textContent = text;
+    tickerLive.listEl.appendChild(chip);
+  }
+}
+
+function setTickerLiveName(name) {
+  if (!tickerLive.active) return;
+  if (!tickerLive.el) return;
+  if (!name) {
+    tickerLive.el.textContent = '';
+    return;
+  }
+
+  const byId = basicData.leftUsers.find(u => u && String(u[0]) === String(name)) ||
+    basicData.users.find(u => u && String(u[0]) === String(name));
+  if (byId) {
+    const dept = byId[2] ? ` · ${byId[2]}` : '';
+    tickerLive.el.textContent = `${byId[1]} · ${byId[0]}${dept}`;
+  } else {
+    tickerLive.el.textContent = String(name);
+  }
+}
+
+function getTickerCenterX() {
+  if (!ticker.el) return window.innerWidth / 2;
+  const rect = ticker.el.getBoundingClientRect();
+  return rect.left + rect.width / 2;
+}
+
+function getTickerWinnerFromPositions() {
+  if (!ticker.items || ticker.items.length === 0) return null;
+  const centerX = getTickerCenterX();
+  let best = null;
+  let bestDist = Infinity;
+  for (const el of ticker.items) {
+    const x = parseFloat(el.dataset.x || '0');
+    const w = el.offsetWidth || 0;
+    const itemCenter = x + w / 2;
+    const dist = Math.abs(itemCenter - centerX);
+    if (dist < bestDist) {
+      bestDist = dist;
+      best = el;
+    }
+  }
+  return best ? (best.dataset && best.dataset.userId ? best.dataset.userId : best.textContent) : null;
+}
+
 let selectedCardIndex = [],
   rotate = false,
   basicData = {
@@ -110,21 +285,85 @@ function handleRemoteCommand(action) {
   if (buttonId) {
     const button = document.querySelector(buttonId);
     if (button) {
-      if (action === 'stop' && isLotting) {
-        // Dừng quay số
-        if (rotateObj && rotateObj.stop) {
-          rotateObj.stop();
+      if (action === 'stop') {
+        if (isLotting) {
+          button.click();
         }
-        btns.lottery.innerHTML = "Bắt đầu quay";
-        setLotteryStatus(false);
-      } else if (action === 'start' && !isLotting) {
-        // Bắt đầu quay số
-        button.click();
-      } else if (action !== 'stop' && action !== 'start') {
-        // Các lệnh khác
-        button.click();
+        return;
       }
+      if (action === 'start') {
+        if (!isLotting) {
+          button.click();
+        }
+        return;
+      }
+
+      // reset/save/reLottery/enter: gọi trực tiếp logic để tránh confirm/popup
+      if (action === 'reset') {
+        addQipao("Đặt lại tất cả dữ liệu, quay lại từ đầu");
+        addHighlight();
+        resetCard();
+        currentLuckys = [];
+        basicData.leftUsers = Object.assign([], basicData.users);
+        basicData.luckyUsers = {};
+        currentPrizeIndex = basicData.prizes.length - 1;
+        currentPrize = basicData.prizes[currentPrizeIndex];
+        resetPrize(currentPrizeIndex);
+        reset();
+        switchScreen("enter");
+        return;
+      }
+
+      if (action === 'save') {
+        saveData().then(() => {
+          resetCard().then(() => {
+            currentLuckys = [];
+          });
+          exportData();
+          addQipao(`Dữ liệu đã được lưu vào EXCEL.`);
+        });
+        return;
+      }
+
+      if (action === 'reLottery') {
+        if (currentLuckys.length === 0) {
+          addQipao(`Hiện tại chưa quay số, không thể quay lại~~`);
+          return;
+        }
+        setErrorData(currentLuckys);
+        addQipao(`Quay lại [${currentPrize.title}], chuẩn bị sẵn sàng`);
+        setLotteryStatus(true);
+        resetCard().then(() => {
+          lottery();
+        });
+        return;
+      }
+
+     
+
+      // enter fallback
+      button.click();
     }
+  }
+
+  if (action === 'save-result') {
+    saveData().then(res => {
+      resetCard().then(res => {
+        // Xóa bản ghi trước đó
+        currentLuckys = [];
+      });
+      addQipao(`Dữ liệu đã được lưu vào EXCEL.`);
+    });
+    // reload page
+    //window.location.reload();
+    return;
+  }
+
+  if (action === 'refresh') {
+    // reload page
+    window.location.reload();
+    initAll();
+    return;
   }
 }
 
@@ -141,14 +380,18 @@ function initAll() {
       // Lấy dữ liệu cơ bản
       prizes = data.cfgData.prizes;
       EACH_COUNT = data.cfgData.EACH_COUNT;
+      window.LOTTERY_PER_DRAW = EACH_COUNT;
       COMPANY = data.cfgData.COMPANY;
       HIGHLIGHT_CELL = createHighlight();
+      // Nếu đang ở màn hình "welcome" (enter) thì bật highlight ngay
+      // (tránh trường hợp initCards chạy trước khi CSS3D cards render xong)
+      setTimeout(addHighlight, 0);
       basicData.prizes = prizes;
       setPrizes(prizes);
 
       TOTAL_CARDS = ROW_COUNT * COLUMN_COUNT;
 
-      // Đọc kết quả quay số đã được thiết lập hiện tại
+      // Đọc ket-qua-quay-so-so đã được thiết lập hiện tại
       basicData.leftUsers = data.leftUsers;
       basicData.luckyUsers = data.luckyData;
 
@@ -237,17 +480,7 @@ function initCards() {
 
   // sphere
 
-  var vector = new THREE.Vector3();
-
-  for (var i = 0, l = threeDCards.length; i < l; i++) {
-    var phi = Math.acos(-1 + (2 * i) / l);
-    var theta = Math.sqrt(l * Math.PI) * phi;
-    var object = new THREE.Object3D();
-    object.position.setFromSphericalCoords(800 * Resolution, phi, theta);
-    vector.copy(object.position).multiplyScalar(2);
-    object.lookAt(vector);
-    targets.sphere.push(object);
-  }
+  // bỏ chế độ sphere (chuyển sang ticker)
 
   renderer = new THREE.CSS3DRenderer();
   renderer.setSize(window.innerWidth, window.innerHeight);
@@ -262,6 +495,8 @@ function initCards() {
   controls.addEventListener("change", render);
 
   bindEvent();
+
+  initTicker();
 
   if (showTable) {
     switchScreen("enter");
@@ -283,8 +518,8 @@ function bindEvent() {
     // Nếu đang quay số, cấm mọi thao tác
     if (isLotting) {
       if (e.target.id === "lottery") {
-        rotateObj.stop();
-        btns.lottery.innerHTML = "Bắt đầu quay";
+        // Kết thúc quay
+        rotateObj && rotateObj.stop && rotateObj.stop();
       } else {
         addQipao("Đang quay số, xin chờ một chút～～");
       }
@@ -330,16 +565,26 @@ function bindEvent() {
         break;
       // Quay số
       case "lottery":
-        setLotteryStatus(true);
-        // Mỗi lần quay số trước tiên lưu dữ liệu quay số lần trước
-        saveData();
-        //Cập nhật hiển thị số lượng quay số còn lại
-        changePrize();
-        resetCard().then(res => {
-          // Quay số
-          lottery();
-        });
-        addQipao(`Đang quay [${currentPrize.title}], chuẩn bị tư thế`);
+        if (!isLotting) {
+          // Bắt đầu quay
+          // Khi bắt đầu quay thì bỏ highlight năm
+          removeHighlight();
+          // Ẩn chữ trắng tickerLive (nếu có)
+          setTickerLiveActive(false);
+          setLotteryStatus(true);
+          // Mỗi lần quay số trước tiên lưu dữ liệu quay số lần trước
+          saveData();
+          //Cập nhật hiển thị số lượng quay số còn lại
+          changePrize();
+          resetCard().then(() => {
+            // Quay số
+            lottery();
+          });
+          addQipao(`Đang quay [${currentPrize.title}], chuẩn bị tư thế`);
+        } else {
+          // Kết thúc quay
+          rotateObj && rotateObj.stop && rotateObj.stop();
+        }
         break;
       // Quay lại
       case "reLottery":
@@ -357,7 +602,7 @@ function bindEvent() {
           lottery();
         });
         break;
-      // Xuất kết quả quay số
+      // Xuất ket-qua-quay-so-so
       case "save":
         saveData().then(res => {
           resetCard().then(res => {
@@ -367,6 +612,15 @@ function bindEvent() {
           exportData();
           addQipao(`Dữ liệu đã được lưu vào EXCEL.`);
         });
+        case 'save-result':
+          saveData().then(res => {
+            resetCard().then(res => {
+              // Xóa bản ghi trước đó
+              currentLuckys = [];
+            });
+            addQipao(`Dữ liệu đã được lưu vào EXCEL.`);
+            
+          });
         break;
     }
   });
@@ -384,9 +638,194 @@ function switchScreen(type) {
     default:
       btns.enter.classList.add("none");
       btns.lotteryBar.classList.remove("none");
-      transform(targets.sphere, 2000);
+      transform(targets.table, 2000);
       break;
   }
+}
+
+function initTicker() {
+  if (ticker.el) return;
+  ticker.el = document.createElement('div');
+  ticker.el.id = 'ticker';
+  ticker.el.innerHTML = `
+    <div class="ticker-center"></div>
+    <div class="ticker-track"></div>
+  `;
+  document.body.appendChild(ticker.el);
+  ticker.track = ticker.el.querySelector('.ticker-track');
+}
+
+function buildTickerItems() {
+  if (!ticker.track) return;
+  const src = basicData.leftUsers.length ? basicData.leftUsers : basicData.users;
+  const pool = src.length ? src : [["", "...", ""]];
+
+  ticker.track.innerHTML = '';
+  ticker.items = [];
+
+  const repeat = Math.max(6, Math.ceil(window.innerWidth / 220) + 10);
+  for (let i = 0; i < repeat; i++) {
+    const u = pool[random(pool.length)];
+    const name = (u && u[1]) ? u[1] : '...';
+    const item = document.createElement('div');
+    item.className = 'ticker-item';
+    item.textContent = name;
+    item.dataset.userId = (u && u[0]) ? String(u[0]) : '';
+    ticker.track.appendChild(item);
+    ticker.items.push(item);
+  }
+}
+
+function startTicker() {
+  initTicker();
+  buildTickerItems();
+  ticker.el.classList.add('active');
+  ticker.running = true;
+  ticker.stopAfter = 0;
+  ticker.stopAt = 0;
+  ticker.winner = null;
+  setTickerLiveActive(true);
+
+  let last = performance.now();
+  const step = (now) => {
+    if (!ticker.running) return;
+    const dt = Math.min(48, now - last);
+    last = now;
+
+    ticker.stopAfter += dt;
+
+    const dx = (ticker.speed * dt) / 16.67;
+    for (const el of ticker.items) {
+      const x = parseFloat(el.dataset.x || '0') - dx;
+      el.dataset.x = String(x);
+      el.style.transform = `translate3d(${x}px, 0, 0)`;
+    }
+
+    // cập nhật danh sách tên theo perDraw
+    const perDraw = (EACH_COUNT && EACH_COUNT[currentPrizeIndex]) ? EACH_COUNT[currentPrizeIndex] : 1;
+    const ids = getTickerNearestUserIds(perDraw);
+    setTickerLiveName(ids[0]);
+    setTickerLiveList(ids);
+
+    // wrap
+    let maxRight = -Infinity;
+    let maxWidth = 160;
+    for (const el of ticker.items) {
+      const x = parseFloat(el.dataset.x || '0');
+      const w = el.offsetWidth || 160;
+      const right = x + w;
+      if (right > maxRight) {
+        maxRight = right;
+        maxWidth = w;
+      }
+    }
+
+    for (const el of ticker.items) {
+      const x = parseFloat(el.dataset.x || '0');
+      const w = el.offsetWidth || 160;
+      if (x + w < -40) {
+        const newX = maxRight + 24;
+        el.dataset.x = String(newX);
+        el.style.transform = `translate3d(${newX}px, 0, 0)`;
+        maxRight = newX + w;
+      }
+    }
+
+    if (ticker.stopAt && now >= ticker.stopAt) {
+      ticker.running = false;
+      cancelAnimationFrame(ticker.raf);
+      ticker.raf = null;
+      finishTicker();
+      return;
+    }
+
+    ticker.raf = requestAnimationFrame(step);
+  };
+
+  // init x positions
+  let x = window.innerWidth;
+  ticker.items.forEach((el) => {
+    el.dataset.x = String(x);
+    el.style.transform = `translate3d(${x}px, 0, 0)`;
+    x += el.offsetWidth + 24;
+  });
+
+  ticker.raf = requestAnimationFrame(step);
+}
+
+function requestStopTicker() {
+  if (!ticker.running) return;
+  // nếu đã yêu cầu dừng rồi thì bỏ qua
+  if (ticker.stopAt) return;
+  // giảm tốc dần trong ~800ms rồi dừng
+  const start = performance.now();
+  const startSpeed = ticker.speed;
+  const decelMs = 800;
+  const decel = (now) => {
+    const t = Math.min(1, (now - start) / decelMs);
+    ticker.speed = startSpeed * (1 - t) + 2;
+    if (t < 1 && ticker.running) {
+      requestAnimationFrame(decel);
+    } else {
+      const perDraw = (EACH_COUNT && EACH_COUNT[currentPrizeIndex]) ? EACH_COUNT[currentPrizeIndex] : 1;
+      const ids = getTickerNearestUserIds(perDraw);
+      ticker.winner = ids[0] || getTickerWinnerFromPositions();
+      ticker.stopAt = performance.now() + 150;
+    }
+  };
+  requestAnimationFrame(decel);
+}
+
+function finishTicker() {
+  ticker.speed = 28;
+  ticker.el && ticker.el.classList.remove('active');
+  setTickerLiveActive(false);
+
+  const forcedWinner = ticker.winner || getTickerWinnerFromPositions();
+
+  // chọn người thắng và gán lên card theo flow cũ
+  currentLuckys = [];
+  selectedCardIndex = [];
+
+  let perCount = EACH_COUNT && EACH_COUNT[currentPrizeIndex] ? EACH_COUNT[currentPrizeIndex] : 1,
+    luckyData = basicData.luckyUsers[currentPrize.type],
+    leftCount = basicData.leftUsers.length,
+    leftPrizeCount = currentPrize.count - (luckyData ? luckyData.length : 0);
+
+  // không vượt quá số giải còn lại
+  perCount = Math.min(perCount, Math.max(0, leftPrizeCount));
+
+  if (leftCount < perCount) {
+    addQipao("Số người tham gia quay số còn lại không đủ, bây giờ đặt lại tất cả người tham gia để có thể quay lần hai！");
+    basicData.leftUsers = basicData.users.slice();
+    leftCount = basicData.leftUsers.length;
+  }
+
+  for (let i = 0; i < perCount; i++) {
+    let luckyId = random(leftCount);
+    if (i === 0 && forcedWinner) {
+      const forcedIndex = basicData.leftUsers.findIndex(u => u && (u[1] === forcedWinner || String(u[0]) === String(forcedWinner)));
+      if (forcedIndex >= 0) {
+        luckyId = forcedIndex;
+      }
+    }
+    currentLuckys.push(basicData.leftUsers.splice(luckyId, 1)[0]);
+    leftCount--;
+    leftPrizeCount--;
+
+    let cardIndex = random(TOTAL_CARDS);
+    while (selectedCardIndex.includes(cardIndex)) {
+      cardIndex = random(TOTAL_CARDS);
+    }
+    selectedCardIndex.push(cardIndex);
+
+    if (leftPrizeCount === 0) {
+      break;
+    }
+  }
+
+  selectCard();
+  
 }
 
 /**
@@ -409,15 +848,15 @@ function createCard(user, isBold, id, showTable) {
   if (isBold) {
     element.className = "element lightitem";
     if (showTable) {
-      element.classList.add("highlight");
+      element.classList.add("highlight", "start-year");
     }
   } else {
     element.className = "element";
     element.style.backgroundColor =
       "rgba(0,127,127," + (Math.random() * 0.7 + 0.25) + ")";
   }
-  //Thêm nhận diện công ty
-  element.appendChild(createElement("company", COMPANY));
+  // Bỏ tên công ty - không hiển thị
+  // element.appendChild(createElement("company", COMPANY));
 
   element.appendChild(createElement("name", user[1]));
 
@@ -427,13 +866,13 @@ function createCard(user, isBold, id, showTable) {
 
 function removeHighlight() {
   document.querySelectorAll(".highlight").forEach(node => {
-    node.classList.remove("highlight");
+    node.classList.remove("highlight", "start-year");
   });
 }
 
 function addHighlight() {
   document.querySelectorAll(".lightitem").forEach(node => {
-    node.classList.add("highlight");
+    node.classList.add("highlight", "start-year");
   });
 }
 
@@ -497,26 +936,12 @@ function transform(targets, duration) {
 // }
 
 function rotateBall() {
-  return new Promise((resolve, reject) => {
-    scene.rotation.y = 0;
-    rotateObj = new TWEEN.Tween(scene.rotation);
-    rotateObj
-      .to(
-        {
-          y: Math.PI * 6 * ROTATE_LOOP
-        },
-        ROTATE_TIME * ROTATE_LOOP
-      )
-      .onUpdate(render)
-      // .easing(TWEEN.Easing.Linear)
-      .start()
-      .onStop(() => {
-        scene.rotation.y = 0;
-        resolve();
-      })
-      .onComplete(() => {
-        resolve();
-      });
+  // giữ API cũ nhưng chuyển sang ticker
+  return new Promise((resolve) => {
+    rotateObj = { stop: () => requestStopTicker() };
+    startTicker();
+    // resolve khi bắt đầu chạy (dừng sẽ gọi finishTicker)
+    resolve();
   });
 }
 
@@ -545,13 +970,17 @@ function render() {
 
 function selectCard(duration = 600) {
   rotate = false;
-  let width = 140,
+  let width = 240,
     tag = -(currentLuckys.length - 1) / 2,
     locates = [];
 
+  // Khi hiển thị kết quả: tắt tickerLive (tên đang chạy ở giữa)
+  setTickerLiveActive(false);
+  resetTickerLive();
+
   // Tính toán thông tin vị trí, lớn hơn 5 thì hiển thị thành 2 hàng
-  if (currentLuckys.length > 5) {
-    let yPosition = [-87, 87],
+  if (currentLuckys.length > 3) {
+    let yPosition = [-150, 150],
       l = selectedCardIndex.length,
       mid = Math.ceil(l / 2);
     tag = -(mid - 1) / 2;
@@ -582,9 +1011,11 @@ function selectCard(duration = 600) {
   }
 
   let text = currentLuckys.map(item => item[1]);
-  addQipao(
-    `Chúc mừng ${text.join("、")} đã trúng ${currentPrize.title}, năm mới thịnh vượng.`
-  );
+  addQipao({
+    title: "KẾT QUẢ QUAY",
+    names: text.join(" · "),
+    prize: `Trúng: ${currentPrize.title}`
+  });
 
   selectedCardIndex.forEach((cardIndex, index) => {
     changeCard(cardIndex, currentLuckys[index]);
@@ -637,7 +1068,7 @@ function resetCard(duration = 500) {
 
   selectedCardIndex.forEach(index => {
     let object = threeDCards[index],
-      target = targets.sphere[index];
+      target = targets.table[index];
 
     new TWEEN.Tween(object.position)
       .to(
@@ -689,46 +1120,11 @@ function lottery() {
   //   return;
   // }
   btns.lottery.innerHTML = "Kết thúc quay";
-  rotateBall().then(() => {
-    // Xóa bản ghi trước đó
-    currentLuckys = [];
-    selectedCardIndex = [];
-    // Số lượng quay cùng lúc hiện tại, sau khi quay hết giải hiện tại vẫn có thể tiếp tục quay nhưng không ghi dữ liệu
-    let perCount = EACH_COUNT[currentPrizeIndex],
-      luckyData = basicData.luckyUsers[currentPrize.type],
-      leftCount = basicData.leftUsers.length,
-      leftPrizeCount = currentPrize.count - (luckyData ? luckyData.length : 0);
-
-    if (leftCount < perCount) {
-      addQipao("Số người tham gia quay số còn lại không đủ, bây giờ đặt lại tất cả người tham gia để có thể quay lần hai！");
-      basicData.leftUsers = basicData.users.slice();
-      leftCount = basicData.leftUsers.length;
-    }
-
-    for (let i = 0; i < perCount; i++) {
-      let luckyId = random(leftCount);
-      currentLuckys.push(basicData.leftUsers.splice(luckyId, 1)[0]);
-      leftCount--;
-      leftPrizeCount--;
-
-      let cardIndex = random(TOTAL_CARDS);
-      while (selectedCardIndex.includes(cardIndex)) {
-        cardIndex = random(TOTAL_CARDS);
-      }
-      selectedCardIndex.push(cardIndex);
-
-      if (leftPrizeCount === 0) {
-        break;
-      }
-    }
-
-    // console.log(currentLuckys);
-    selectCard();
-  });
+  rotateBall();
 }
 
 /**
- * Lưu kết quả quay số lần trước
+ * Lưu ket-qua-quay-so-so lần trước
  */
 function saveData() {
   if (!currentPrize) {
@@ -779,9 +1175,9 @@ function random(num) {
 function changeCard(cardIndex, user) {
   let card = threeDCards[cardIndex].element;
 
-  card.innerHTML = `<div class="company">${COMPANY}</div><div class="name">${
-    user[1]
-  }</div><div class="details">${user[0] || ""}<br/>${user[2] || "PSST"}</div>`;
+  card.innerHTML = `<div class="name">${user[1]}</div><div class="details">${
+    user[0] || ""
+  }<br/>${user[2] || ""}</div>`;
 }
 
 /**
@@ -894,51 +1290,4 @@ function createHighlight() {
   return highlight;
 }
 
-let onload = window.onload;
-
-window.onload = function () {
-  onload && onload();
-
-  let music = document.querySelector("#music");
-
-  let rotated = 0,
-    stopAnimate = false,
-    musicBox = document.querySelector("#musicBox");
-
-  function animate() {
-    requestAnimationFrame(function () {
-      if (stopAnimate) {
-        return;
-      }
-      rotated = rotated % 360;
-      musicBox.style.transform = "rotate(" + rotated + "deg)";
-      rotated += 1;
-      animate();
-    });
-  }
-
-  musicBox.addEventListener(
-    "click",
-    function (e) {
-      if (music.paused) {
-        music.play().then(
-          () => {
-            stopAnimate = false;
-            animate();
-          },
-          () => {
-            addQipao("Nhạc nền tự động phát thất bại, vui lòng phát thủ công！");
-          }
-        );
-      } else {
-        music.pause();
-        stopAnimate = true;
-      }
-    },
-    false
-  );
-
-  setTimeout(function () {
-    musicBox.click();
-  }, 1000);
-};
+// Background music functionality has been removed as requested

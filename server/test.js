@@ -1,6 +1,6 @@
 const fs = require("fs");
 
-// Kiểm tra tính chính xác của dữ liệu kết quả quay số
+// Kiểm tra tính chính xác của dữ liệu ket-qua-quay-so-so
 var selected = {},
   repeat = [],
   luckyData = require("/Users/xiechang/Documents/project/抽奖/product/dist/temp.json"),

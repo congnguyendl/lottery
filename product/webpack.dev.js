@@ -8,7 +8,7 @@ module.exports = merge(baseConfig, {
     hot: true,
     compress: true,
     port: 9000,
-    open: true,
+    open: false,
     contentBase: path.join(__dirname, "src"),
     watchContentBase: true,
     proxy: {

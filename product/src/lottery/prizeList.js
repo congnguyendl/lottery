@@ -114,6 +114,21 @@ class Qipao {
   setText(text) {
     this.text = text || this.text;
     this.element.textContent = this.text;
+    this.element.classList.remove('qipao-winner');
+    this.element.innerHTML = '';
+    if (typeof this.text === 'object' && this.text) {
+      const title = this.text.title || '';
+      const names = this.text.names || '';
+      const prize = this.text.prize || '';
+      this.element.classList.add('qipao-winner');
+      this.element.innerHTML = `
+        <span class="qipao-title">${title}</span>
+        <span class="qipao-names">${names}</span>
+        <span class="qipao-prize">${prize}</span>
+      `;
+      return;
+    }
+    this.element.textContent = this.text;
   }
 
   start(text) {
@@ -121,11 +136,12 @@ class Qipao {
     this.element.classList.remove("bounceOutRight");
     this.element.classList.add("bounceInRight");
 
+    const duration = (typeof text === 'object' && text) ? 5500 : 4000;
     setTimeout(() => {
       this.element.classList.remove("bounceInRight");
       this.element.classList.add("bounceOutRight");
       this.onComplete && this.onComplete();
-    }, 4000);
+    }, duration);
   }
 }
 
@@ -158,7 +174,7 @@ function showPrizeList(currentPrizeIndex) {
   if (currentPrize.type === defaultType) {
     currentPrize.count === "Không giới hạn";
   }
-  let htmlCode = `<div class="prize-mess">Đang quay<label id="prizeType" class="prize-shine">${currentPrize.text}</label><label id="prizeText" class="prize-shine">${currentPrize.title}</label>，còn lại<label id="prizeLeft" class="prize-shine">${currentPrize.count}</label>giải</div><ul class="prize-list">`;
+  let htmlCode = `<div class="prize-mess">Đang quay<label id="prizeType" class="prize-shine">${currentPrize.text}</label><label id="prizeText" class="prize-shine">${currentPrize.title}</label>，quay/lần<label id="prizePerDraw" class="prize-shine">1</label>，còn lại<label id="prizeLeft" class="prize-shine">${currentPrize.count}</label>giải</div><ul class="prize-list">`;
   prizes.forEach(item => {
     if (item.type === defaultType) {
       return true;
@@ -221,6 +237,7 @@ let setPrizeData = (function () {
       prizeElement.prizeType = document.querySelector("#prizeType");
       prizeElement.prizeLeft = document.querySelector("#prizeLeft");
       prizeElement.prizeText = document.querySelector("#prizeText");
+      prizeElement.prizePerDraw = document.querySelector("#prizePerDraw");
     }
 
     if (isInit) {
@@ -243,6 +260,12 @@ let setPrizeData = (function () {
       prizeElement.prizeType.textContent = currentPrize.text;
       prizeElement.prizeText.textContent = currentPrize.title;
 
+      // hiển thị số lượng quay mỗi lần (EACH_COUNT) do index.js set từ ngoài
+      if (prizeElement.prizePerDraw && typeof window !== 'undefined' && window.LOTTERY_PER_DRAW !== undefined) {
+        const v = parseInt(window.LOTTERY_PER_DRAW[currentPrizeIndex]);
+        prizeElement.prizePerDraw.textContent = Number.isFinite(v) && v > 0 ? String(v) : '1';
+      }
+
       lasetPrizeIndex = currentPrizeIndex;
     }
 
@@ -250,6 +273,7 @@ let setPrizeData = (function () {
       prizeElement.prizeType.textContent = "Giải đặc biệt";
       prizeElement.prizeText.textContent = " ";
       prizeElement.prizeLeft.textContent = "Không giới hạn";
+      prizeElement.prizePerDraw && (prizeElement.prizePerDraw.textContent = "1");
       return;
     }
 

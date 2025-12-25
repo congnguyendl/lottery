@@ -14,7 +14,9 @@ const {
   writeXML,
   saveDataFile,
   shuffle,
-  saveErrorDataFile
+  saveErrorDataFile,
+  loadPrizeConfig,
+  savePrizeConfig
 } = require("./help");
 
 let app = express(),
@@ -65,10 +67,16 @@ app.get("/", (req, res) => {
 //Thiết lập truy cập cross-origin
 app.all("*", function(req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Headers", "X-Requested-With");
+  res.header(
+    "Access-Control-Allow-Headers",
+    "X-Requested-With, Content-Type, Accept, Origin, Authorization"
+  );
   res.header("Access-Control-Allow-Methods", "PUT,POST,GET,DELETE,OPTIONS");
   res.header("X-Powered-By", " 3.2.1");
   res.header("Content-Type", "application/json;charset=utf-8");
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(204);
+  }
   next();
 });
 
@@ -80,6 +88,16 @@ app.post("*", (req, res, next) => {
 // Lấy dữ liệu đã thiết lập trước đó
 router.post("/getTempData", (req, res, next) => {
   getLeftUsers();
+  // Đồng bộ EACH_COUNT theo độ dài prizes để tránh lệch index sau khi add/delete
+  if (!Array.isArray(cfg.EACH_COUNT)) {
+    cfg.EACH_COUNT = [];
+  }
+  if (cfg.EACH_COUNT.length < cfg.prizes.length) {
+    cfg.EACH_COUNT.length = cfg.prizes.length;
+  }
+  for (let i = 0; i < cfg.prizes.length; i++) {
+    if (!cfg.EACH_COUNT[i] || cfg.EACH_COUNT[i] < 1) cfg.EACH_COUNT[i] = 1;
+  }
   res.json({
     cfgData: cfg,
     leftUsers: curData.leftUsers,
@@ -93,6 +111,7 @@ router.post("/reset", (req, res, next) => {
   errorData = [];
   log(`Đặt lại dữ liệu thành công`);
   saveErrorDataFile(errorData);
+  // giữ nguyên cấu hình giải thưởng đã lưu
   return saveDataFile(luckyData).then(data => {
     res.json({
       type: "success"
@@ -108,7 +127,7 @@ router.post("/getUsers", (req, res, next) => {
 
 // Lấy thông tin giải thưởng
 router.post("/getPrizes", (req, res, next) => {
-  res.json({ prizes: cfg.prizes });
+  res.json({ prizes: cfg.prizes, cfgData: { EACH_COUNT: cfg.EACH_COUNT } });
   log(`Trả về dữ liệu giải thưởng thành công`);
 });
 
@@ -131,6 +150,32 @@ router.post("/api/uploadUsers", upload.single("file"), (req, res, next) => {
   }
 });
 
+// API: Upload prize image
+router.post("/api/uploadPrizeImg", upload.single("file"), (req, res, next) => {
+  if (!req.file) {
+    return res.json({ success: false, error: "Không có file được upload" });
+  }
+
+  try {
+    const ext = path.extname(req.file.originalname || "").toLowerCase();
+    const allowed = new Set([".png", ".jpg", ".jpeg", ".gif", ".webp"]);
+    if (!allowed.has(ext)) {
+      fs.unlinkSync(req.file.path);
+      return res.json({ success: false, error: "File ảnh không hợp lệ" });
+    }
+
+    const finalName = `${req.file.filename}${ext}`;
+    const finalPath = path.join(uploadDir, finalName);
+    fs.renameSync(req.file.path, finalPath);
+
+    const url = `./data/uploads/${finalName}`;
+    res.json({ success: true, url });
+    log(`Upload prize image thành công: ${url}`);
+  } catch (error) {
+    res.json({ success: false, error: error.message });
+  }
+});
+
 // API: Add prize
 router.post("/api/addPrize", (req, res, next) => {
   try {
@@ -138,6 +183,19 @@ router.post("/api/addPrize", (req, res, next) => {
     const maxType = Math.max(...cfg.prizes.map(p => p.type));
     newPrize.type = maxType + 1;
     cfg.prizes.push(newPrize);
+
+    // Mặc định số lượng quay mỗi lần cho prize mới
+    if (!Array.isArray(cfg.EACH_COUNT)) {
+      cfg.EACH_COUNT = [];
+    }
+    if (cfg.EACH_COUNT.length < cfg.prizes.length) {
+      cfg.EACH_COUNT.length = cfg.prizes.length;
+    }
+    const newIndex = cfg.prizes.length - 1;
+    cfg.EACH_COUNT[newIndex] = cfg.EACH_COUNT[newIndex] || 1;
+
+    savePrizeConfig({ prizes: cfg.prizes, EACH_COUNT: cfg.EACH_COUNT }).catch(() => {});
+
     res.json({ success: true });
     broadcast({ type: "prizeUpdate", prizes: cfg.prizes });
   } catch (error) {
@@ -149,7 +207,96 @@ router.post("/api/addPrize", (req, res, next) => {
 router.delete("/api/deletePrize/:type", (req, res, next) => {
   try {
     const type = parseInt(req.params.type);
+    const idx = cfg.prizes.findIndex(p => p.type === type);
     cfg.prizes = cfg.prizes.filter(p => p.type !== type);
+    if (idx >= 0 && Array.isArray(cfg.EACH_COUNT)) {
+      cfg.EACH_COUNT.splice(idx, 1);
+    }
+
+    savePrizeConfig({ prizes: cfg.prizes, EACH_COUNT: cfg.EACH_COUNT }).catch(() => {});
+    res.json({ success: true });
+    broadcast({ type: "prizeUpdate", prizes: cfg.prizes });
+  } catch (error) {
+    res.json({ success: false, error: error.message });
+  }
+});
+
+// API: Update prize
+router.put("/api/updatePrize/:type", (req, res, next) => {
+  try {
+    const type = parseInt(req.params.type);
+    if (type === defaultType) {
+      return res.json({ success: false, error: "Không thể sửa giải đặc biệt" });
+    }
+
+    const idx = cfg.prizes.findIndex(p => p.type === type);
+    if (idx === -1) {
+      return res.json({ success: false, error: "Không tìm thấy giải thưởng" });
+    }
+
+    const payload = req.body || {};
+    const updated = {
+      ...cfg.prizes[idx],
+      text: payload.text,
+      title: payload.title,
+      count: parseInt(payload.count),
+      img: payload.img
+    };
+
+    if (!updated.text || !updated.title || !Number.isFinite(updated.count) || updated.count < 1) {
+      return res.json({ success: false, error: "Dữ liệu không hợp lệ" });
+    }
+
+    cfg.prizes[idx] = updated;
+
+    // cập nhật số lượng quay mỗi lần (perDraw) theo index
+    if (payload.perDraw !== undefined) {
+      const perDraw = parseInt(payload.perDraw);
+      if (!Number.isFinite(perDraw) || perDraw < 1) {
+        return res.json({ success: false, error: "Số lượng quay mỗi lần không hợp lệ" });
+      }
+      if (!Array.isArray(cfg.EACH_COUNT)) {
+        cfg.EACH_COUNT = [];
+      }
+      if (cfg.EACH_COUNT.length < cfg.prizes.length) {
+        cfg.EACH_COUNT.length = cfg.prizes.length;
+      }
+      cfg.EACH_COUNT[idx] = perDraw;
+    }
+
+    savePrizeConfig({ prizes: cfg.prizes, EACH_COUNT: cfg.EACH_COUNT }).catch(() => {});
+
+    res.json({ success: true });
+    broadcast({ type: "prizeUpdate", prizes: cfg.prizes });
+  } catch (error) {
+    res.json({ success: false, error: error.message });
+  }
+});
+
+// API: Update per-draw count for prize index
+router.put("/api/updatePrizePerDraw/:type", (req, res) => {
+  try {
+    const type = parseInt(req.params.type);
+    const idx = cfg.prizes.findIndex(p => p.type === type);
+    if (idx === -1) {
+      return res.json({ success: false, error: "Không tìm thấy giải thưởng" });
+    }
+
+    const perDraw = parseInt((req.body || {}).perDraw);
+    if (!Number.isFinite(perDraw) || perDraw < 1) {
+      return res.json({ success: false, error: "Số lượng quay mỗi lần không hợp lệ" });
+    }
+
+    if (!Array.isArray(cfg.EACH_COUNT)) {
+      cfg.EACH_COUNT = [];
+    }
+    if (cfg.EACH_COUNT.length < cfg.prizes.length) {
+      cfg.EACH_COUNT.length = cfg.prizes.length;
+    }
+    cfg.EACH_COUNT[idx] = perDraw;
+
+    savePrizeConfig({ prizes: cfg.prizes, EACH_COUNT: cfg.EACH_COUNT }).catch(() => {});
+
     res.json({ success: true });
     broadcast({ type: "prizeUpdate", prizes: cfg.prizes });
   } catch (error) {
@@ -175,6 +322,28 @@ router.get("/api/stats", (req, res, next) => {
     drawnPrizes,
     remainingPrizes: totalPrizes - drawnPrizes
   });
+});
+
+// API: Get winners list (grouped by prize)
+router.get("/api/winners", (req, res) => {
+  try {
+    const prizes = cfg.prizes || [];
+    const out = prizes
+      .filter(p => p && p.type !== defaultType)
+      .map(p => {
+        const winners = luckyData[p.type] || [];
+        return {
+          type: p.type,
+          text: p.text,
+          title: p.title,
+          count: p.count,
+          winners
+        };
+      });
+    res.json({ success: true, prizes: out });
+  } catch (error) {
+    res.json({ success: false, error: error.message });
+  }
 });
 
 // Lưu dữ liệu quay số
@@ -222,12 +391,12 @@ router.post("/export", (req, res, next) => {
     outData = outData.concat(luckyData[item.type] || []);
   });
 
-  writeXML(outData, "/Kết quả quay số.xlsx")
+  writeXML(outData, "ket-qua-quay-so-so.xlsx")
     .then(dt => {
-      // res.download('/Kết quả quay số.xlsx');
+      // res.download('/ket-qua-quay-so-so.xlsx');
       res.status(200).json({
         type: "success",
-        url: "Kết quả quay số.xlsx"
+        url: "ket-qua-quay-so-so.xlsx"
       });
       log(`Xuất dữ liệu thành công！`);
     })
@@ -284,6 +453,20 @@ app.use(router);
 function loadData() {
   console.log("Tải file dữ liệu EXCEL");
   let cfgData = {};
+
+  // Load config prizes/EACH_COUNT từ file nếu có
+  loadPrizeConfig()
+    .then((saved) => {
+      if (saved && Array.isArray(saved.prizes) && saved.prizes.length) {
+        cfg.prizes = saved.prizes;
+      }
+      if (saved && Array.isArray(saved.EACH_COUNT) && saved.EACH_COUNT.length) {
+        cfg.EACH_COUNT = saved.EACH_COUNT;
+      }
+      // đồng bộ defaultType theo config mới
+      defaultType = cfg.prizes[0] && cfg.prizes[0].type !== undefined ? cfg.prizes[0].type : defaultType;
+    })
+    .catch(() => {});
 
   // curData.users = loadXML(path.join(cwd, "data/users.xlsx"));
   curData.users = loadXML(path.join(dataBath, "data/users.xlsx"));

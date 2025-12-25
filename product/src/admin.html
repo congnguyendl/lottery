@@ -13,7 +13,8 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #DA251D 0%, #FFCD00 50%, #DA251D 100%);
+            background: radial-gradient(1200px 600px at 18% 18%, rgba(0, 170, 184, 0.22) 0%, rgba(255, 255, 255, 0) 55%),
+                        linear-gradient(135deg, #F6FBFD 0%, #E7F5F8 55%, #DCEFF4 100%);
             min-height: 100vh;
             padding: 20px;
         }
@@ -21,25 +22,31 @@
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(255, 255, 255, 0.92);
             border-radius: 15px;
             padding: 30px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 18px 60px rgba(0, 54, 61, 0.18);
+            border: 1px solid rgba(0, 170, 184, 0.18);
         }
 
         h1 {
-            color: #DA251D;
+            color: #00363D;
             text-align: center;
             margin-bottom: 30px;
             font-size: 2.5em;
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
         }
 
+        h2 {
+            color: #00363D;
+            margin-bottom: 12px;
+        }
+
         .tabs {
             display: flex;
             gap: 10px;
             margin-bottom: 30px;
-            border-bottom: 2px solid #FFCD00;
+            border-bottom: 1px solid rgba(0, 170, 184, 0.22);
         }
 
         .tab {
@@ -55,8 +62,8 @@
         }
 
         .tab.active {
-            color: #DA251D;
-            border-bottom-color: #DA251D;
+            color: #007C8A;
+            border-bottom-color: #007C8A;
         }
 
         .tab-content {
@@ -93,11 +100,11 @@
         input:focus,
         textarea:focus {
             outline: none;
-            border-color: #DA251D;
+            border-color: #00AAB8;
         }
 
         button {
-            background: linear-gradient(135deg, #DA251D 0%, #FF6B5A 100%);
+            background: linear-gradient(135deg, #00AAB8 0%, #007C8A 100%);
             color: white;
             border: none;
             padding: 12px 30px;
@@ -106,32 +113,171 @@
             font-weight: bold;
             cursor: pointer;
             transition: all 0.3s;
-            box-shadow: 0 4px 15px rgba(218, 37, 29, 0.3);
+            box-shadow: 0 10px 26px rgba(0, 54, 61, 0.18);
         }
 
         button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(218, 37, 29, 0.5);
+            box-shadow: 0 14px 34px rgba(0, 54, 61, 0.22);
         }
 
         .btn-secondary {
-            background: linear-gradient(135deg, #FFCD00 0%, #FFE066 100%);
-            color: #DA251D;
+            background: linear-gradient(135deg, rgba(0, 170, 184, 0.10) 0%, rgba(0, 170, 184, 0.18) 100%);
+            color: #00363D;
+            border: 1px solid rgba(0, 170, 184, 0.35);
+        }
+
+        .hint {
+            margin-top: 10px;
+            padding: 12px;
+            border-radius: 12px;
+            background: rgba(0, 170, 184, 0.08);
+            border: 1px solid rgba(0, 170, 184, 0.18);
+            color: rgba(0, 54, 61, 0.82);
+            font-weight: 600;
+            line-height: 1.4;
+        }
+
+        .hint code {
+            font-weight: 800;
         }
 
         .prize-list {
             margin-top: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 14px;
+        }
+
+        .prize-meta {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+            color: #444;
+        }
+
+        .prize-meta small {
+            color: #666;
+            font-weight: 600;
+        }
+
+        .prize-thumb {
+            width: 56px;
+            height: 56px;
+            border-radius: 10px;
+            object-fit: cover;
+            border: 1px solid rgba(0, 170, 184, 0.25);
+            background: #fff;
+            flex: 0 0 auto;
         }
 
         .prize-item {
-            background: #f9f9f9;
-            padding: 15px;
-            margin-bottom: 10px;
-            border-radius: 8px;
-            border-left: 4px solid #DA251D;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.96) 0%, rgba(231, 245, 248, 0.88) 100%);
+            padding: 14px;
+            border-radius: 14px;
+            border: 1px solid rgba(0, 170, 184, 0.18);
+            box-shadow: 0 12px 30px rgba(0, 54, 61, 0.12);
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+
+        .prize-row {
             display: flex;
-            justify-content: space-between;
+            gap: 12px;
             align-items: center;
+        }
+
+        .prize-main {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            min-width: 0;
+        }
+
+        .prize-name {
+            font-weight: 900;
+            color: #00363D;
+            font-size: 1.08em;
+            line-height: 1.2;
+        }
+
+        .prize-title {
+            color: rgba(0, 54, 61, 0.72);
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .prize-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: rgba(0, 170, 184, 0.10);
+            border: 1px solid rgba(0, 170, 184, 0.22);
+            color: rgba(0, 54, 61, 0.78);
+            font-weight: 700;
+            font-size: 0.88em;
+        }
+
+        .chip .k {
+            color: rgba(0, 54, 61, 0.56);
+            font-weight: 800;
+        }
+
+        .prize-actions {
+            display: flex;
+            gap: 10px;
+            flex: 0 0 auto;
+            justify-content: flex-end;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #b71c1c 0%, #e53935 100%);
+        }
+
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.45);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-backdrop.show {
+            display: flex;
+        }
+
+        .modal {
+            width: min(560px, calc(100vw - 40px));
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 14px;
+            padding: 22px;
+            box-shadow: 0 14px 60px rgba(0, 0, 0, 0.35);
+        }
+
+        .modal h3 {
+            color: #00363D;
+            margin-bottom: 14px;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 16px;
         }
 
         .prize-item button {
@@ -170,12 +316,13 @@
         }
 
         .stat-card {
-            background: linear-gradient(135deg, #FFCD00 0%, #FFE066 100%);
+            background: linear-gradient(135deg, rgba(0, 170, 184, 0.10) 0%, rgba(0, 170, 184, 0.18) 100%);
             padding: 20px;
             border-radius: 10px;
             text-align: center;
-            color: #DA251D;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            color: #00363D;
+            border: 1px solid rgba(0, 170, 184, 0.22);
+            box-shadow: 0 12px 30px rgba(0, 54, 61, 0.10);
         }
 
         .stat-card h3 {
@@ -190,14 +337,14 @@
 </head>
 <body>
     <div class="container">
-        <h1>🏆 Quản lý Quay số Trúng thưởng</h1>
+        <h1>Quản lý Quay số Trúng thưởng</h1>
 
         <div class="message" id="message"></div>
 
         <div class="tabs">
-            <button class="tab active" onclick="switchTab('users')">👥 Quản lý Người tham gia</button>
-            <button class="tab" onclick="switchTab('prizes')">🎁 Quản lý Giải thưởng</button>
-            <button class="tab" onclick="switchTab('stats')">📊 Thống kê</button>
+            <button class="tab active" onclick="switchTab('users')">Người tham gia</button>
+            <button class="tab" onclick="switchTab('prizes')">Giải thưởng</button>
+            <button class="tab" onclick="switchTab('stats')">Thống kê</button>
         </div>
 
         <!-- Tab Quản lý Người tham gia -->
@@ -207,9 +354,14 @@
                 <div class="form-group">
                     <label for="userFile">Chọn file Excel (.xlsx)</label>
                     <input type="file" id="userFile" accept=".xlsx" required>
-                    <small>File Excel phải có cột: Mã nhân viên, Họ tên, Phòng ban</small>
+                    <div class="hint">
+                        Cột bắt buộc theo thứ tự: <code>Mã nhân viên</code>, <code>Họ tên</code>, <code>Phòng ban</code> (dòng đầu là tiêu đề).
+                    </div>
                 </div>
-                <button type="submit">📤 Import Người tham gia</button>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <button type="submit">Import Người tham gia</button>
+                    <button type="button" class="btn-secondary" id="downloadUserTemplate">Tải mẫu import</button>
+                </div>
             </form>
 
             <div class="stats" id="userStats">
@@ -230,7 +382,7 @@
 
         <!-- Tab Quản lý Giải thưởng -->
         <div id="prizes" class="tab-content">
-            <h2>Quản lý Giải thưởng</h2>
+            <h2>Giải thưởng</h2>
             <form id="prizeForm">
                 <div class="form-group">
                     <label for="prizeText">Tên giải thưởng</label>
@@ -246,9 +398,10 @@
                 </div>
                 <div class="form-group">
                     <label for="prizeImg">URL hình ảnh</label>
-                    <input type="text" id="prizeImg" placeholder="../img/prize.jpg">
+                    <input type="file" id="prizeImgFile" accept="image/*">
+                    <input type="text" id="prizeImg" placeholder="../img/prize.jpg" style="margin-top: 10px;">
                 </div>
-                <button type="submit">➕ Thêm Giải thưởng</button>
+                <button type="submit">Thêm giải thưởng</button>
             </form>
 
             <div class="prize-list" id="prizeList"></div>
@@ -273,6 +426,41 @@
             </div>
             <button class="btn-secondary" onclick="exportResults()">📥 Xuất kết quả Excel</button>
             <button class="btn-secondary" onclick="resetAll()" style="margin-left: 10px;">🔄 Đặt lại tất cả</button>
+        </div>
+
+        <!-- Modal sửa giải thưởng -->
+        <div id="editBackdrop" class="modal-backdrop">
+            <div class="modal" role="dialog" aria-modal="true">
+                <h3>Sửa giải thưởng</h3>
+                <form id="editPrizeForm">
+                    <input type="hidden" id="editPrizeType">
+                    <div class="form-group">
+                        <label for="editPrizeText">Tên giải thưởng</label>
+                        <input type="text" id="editPrizeText" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editPrizeTitle">Mô tả giải thưởng</label>
+                        <input type="text" id="editPrizeTitle" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editPrizeCount">Số lượng</label>
+                        <input type="number" id="editPrizeCount" min="1" required>
+                    </div>
+                <div class="form-group">
+                    <label for="editPrizePerDraw">Số lượng quay mỗi lần</label>
+                    <input type="number" id="editPrizePerDraw" min="1" required>
+                </div>
+                    <div class="form-group">
+                        <label for="editPrizeImg">URL hình ảnh</label>
+                        <input type="file" id="editPrizeImgFile" accept="image/*">
+                        <input type="text" id="editPrizeImg" style="margin-top: 10px;">
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" class="btn-secondary" onclick="closeEditModal()">Hủy</button>
+                        <button type="submit">Lưu</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
@@ -318,14 +506,49 @@
             }
         });
 
+        document.getElementById('downloadUserTemplate').addEventListener('click', () => {
+            const rows = [
+                ['Mã nhân viên', 'Họ tên', 'Phòng ban'],
+                ['NV001', 'Nguyễn Văn A', 'Hành chính'],
+                ['NV002', 'Trần Thị B', 'Kinh doanh']
+            ];
+
+            const csv = rows
+                .map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(','))
+                .join('\n');
+
+            const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'mau-import-nguoi-tham-gia.csv';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+        });
+
         // Add prize
         document.getElementById('prizeForm').addEventListener('submit', async (e) => {
             e.preventDefault();
+
+            let imgUrl = document.getElementById('prizeImg').value || '';
+            const imgFile = document.getElementById('prizeImgFile').files[0];
+            if (imgFile) {
+                const up = await uploadPrizeImage(imgFile);
+                if (!up.success) {
+                    showMessage('Upload ảnh thất bại: ' + up.error, 'error');
+                    return;
+                }
+                imgUrl = up.url;
+            }
+
             const prize = {
                 text: document.getElementById('prizeText').value,
                 title: document.getElementById('prizeTitle').value,
                 count: parseInt(document.getElementById('prizeCount').value),
-                img: document.getElementById('prizeImg').value || '../img/default.jpg'
+                img: imgUrl || '../img/default.jpg'
             };
 
             try {
@@ -347,6 +570,16 @@
             }
         });
 
+        async function uploadPrizeImage(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+            const response = await fetch('http://localhost:18888/api/uploadPrizeImg', {
+                method: 'POST',
+                body: formData
+            });
+            return response.json();
+        }
+
         async function loadStats() {
             try {
                 const response = await fetch('/api/stats');
@@ -362,33 +595,125 @@
             }
         }
 
+        let prizesCache = [];
+
         async function loadPrizes() {
             try {
-                const response = await fetch('/api/getPrizes');
+                const response = await fetch('http://localhost:18888/getPrizes', {
+                    method: 'POST',
+                    headers: { 'Accept': 'application/json' }
+                });
                 const data = await response.json();
                 const prizeList = document.getElementById('prizeList');
                 prizeList.innerHTML = '';
+                prizesCache = data.prizes || [];
+                let perDrawArr = (data.cfgData && Array.isArray(data.cfgData.EACH_COUNT)) ? data.cfgData.EACH_COUNT : [];
+                if (!perDrawArr.length) {
+                    const tmp = await fetch('http://localhost:18888/getTempData', { method: 'POST', headers: { 'Accept': 'application/json' } });
+                    const tmpData = await tmp.json();
+                    perDrawArr = (tmpData.cfgData && Array.isArray(tmpData.cfgData.EACH_COUNT)) ? tmpData.cfgData.EACH_COUNT : [];
+                }
+                if (!prizesCache.length) {
+                    prizeList.innerHTML = '<div class="message error show">Không có dữ liệu giải thưởng (API trả về rỗng).</div>';
+                    return;
+                }
                 data.prizes.forEach((prize, index) => {
                     if (prize.type === 0) return; // Skip special prize
+                    prize.perDraw = perDrawArr[index] || 1;
                     const div = document.createElement('div');
                     div.className = 'prize-item';
+                    const img = prize.img || '../img/default.jpg';
                     div.innerHTML = `
-                        <div>
-                            <strong>${prize.text}</strong> - ${prize.title} (${prize.count} giải)
+                        <div class="prize-row">
+                            <img class="prize-thumb" src="${img}" alt="${prize.title}" onerror="this.src='../img/default.jpg'">
+                            <div class="prize-main">
+                                <div class="prize-name">${prize.text || ''}</div>
+                                <div class="prize-title">${prize.title || ''}</div>
+                            </div>
                         </div>
-                        <button onclick="deletePrize(${prize.type})">Xóa</button>
+                        <div class="prize-chips">
+                            <span class="chip"><span class="k">Mã</span> ${prize.type}</span>
+                            <span class="chip"><span class="k">SL</span> ${prize.count}</span>
+                            <span class="chip"><span class="k">Quay/lần</span> ${prize.perDraw}</span>
+                            <span class="chip" title="${img}"><span class="k">Ảnh</span> ${String(img).split('/').slice(-1)[0]}</span>
+                        </div>
+                        <div class="prize-actions">
+                            <button class="btn-secondary" onclick="openEditModal(${prize.type})">Sửa</button>
+                            <button class="btn-danger" onclick="deletePrize(${prize.type})">Xóa</button>
+                        </div>
                     `;
                     prizeList.appendChild(div);
                 });
             } catch (error) {
-                console.error('Lỗi load prizes:', error);
+                const prizeList = document.getElementById('prizeList');
+                prizeList.innerHTML = `<div class="message error show">Lỗi load prizes: ${error.message}</div>`;
             }
         }
+
+        function openEditModal(type) {
+            const prize = prizesCache.find(p => p.type === type);
+            if (!prize) return;
+            document.getElementById('editPrizeType').value = String(prize.type);
+            document.getElementById('editPrizeText').value = prize.text || '';
+            document.getElementById('editPrizeTitle').value = prize.title || '';
+            document.getElementById('editPrizeCount').value = prize.count || 1;
+            document.getElementById('editPrizePerDraw').value = prize.perDraw || 1;
+            document.getElementById('editPrizeImg').value = prize.img || '';
+            document.getElementById('editBackdrop').classList.add('show');
+        }
+
+        function closeEditModal() {
+            document.getElementById('editBackdrop').classList.remove('show');
+        }
+
+        document.getElementById('editBackdrop').addEventListener('click', (e) => {
+            if (e.target && e.target.id === 'editBackdrop') closeEditModal();
+        });
+
+        document.getElementById('editPrizeForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const type = parseInt(document.getElementById('editPrizeType').value);
+            let imgUrl = document.getElementById('editPrizeImg').value || '';
+            const imgFile = document.getElementById('editPrizeImgFile').files[0];
+            if (imgFile) {
+                const up = await uploadPrizeImage(imgFile);
+                if (!up.success) {
+                    showMessage('Upload ảnh thất bại: ' + up.error, 'error');
+                    return;
+                }
+                imgUrl = up.url;
+            }
+            const payload = {
+                text: document.getElementById('editPrizeText').value,
+                title: document.getElementById('editPrizeTitle').value,
+                count: parseInt(document.getElementById('editPrizeCount').value),
+                perDraw: parseInt(document.getElementById('editPrizePerDraw').value),
+                img: imgUrl || '../img/default.jpg'
+            };
+
+            try {
+                const response = await fetch(`http://localhost:18888/api/updatePrize/${type}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await response.json();
+                if (data.success) {
+                    showMessage('Cập nhật giải thưởng thành công!');
+                    closeEditModal();
+                    loadPrizes();
+                } else {
+                    showMessage('Thất bại: ' + data.error, 'error');
+                }
+            } catch (error) {
+                showMessage('Lỗi: ' + error.message, 'error');
+            }
+        });
 
         async function deletePrize(type) {
             if (!confirm('Bạn có chắc muốn xóa giải thưởng này?')) return;
             try {
-                const response = await fetch(`/api/deletePrize/${type}`, { method: 'DELETE' });
+                const response = await fetch(`http://localhost:18888/api/deletePrize/${type}`, { method: 'DELETE' });
                 const data = await response.json();
                 if (data.success) {
                     showMessage('Xóa thành công!');
@@ -432,4 +757,6 @@
     </script>
 </body>
 </html>
+
+
 

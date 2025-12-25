@@ -1,308 +1,767 @@
 <!DOCTYPE html>
 <html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Điều khiển Quay số</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(
+          135deg,
+          #da251d 0%,
+          #ffcd00 50%,
+          #da251d 100%
+        );
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 15px;
+        padding: 30px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+      }
+
+      .tabs {
+        display: flex;
+        gap: 10px;
+        margin: 16px 0 18px;
+        border-bottom: 1px solid rgba(218, 37, 29, 0.2);
+      }
+
+      .tab {
+        padding: 10px 14px;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        font-weight: 900;
+        color: rgba(218, 37, 29, 0.72);
+        border-bottom: 3px solid transparent;
+        font-size: 1em;
+      }
+
+      .tab.active {
+        color: #da251d;
+        border-bottom-color: #da251d;
+      }
+
+      .tab-content {
+        display: none;
+      }
+
+      .tab-content.active {
+        display: block;
+      }
+
+      .tab-danger {
+        color: rgba(183, 28, 28, 0.78);
+      }
+
+      .tab-danger.active {
+        color: #b71c1c;
+        border-bottom-color: #b71c1c;
+      }
+
+      h1 {
+        color: #da251d;
+        text-align: center;
+        margin-bottom: 30px;
+        font-size: 2em;
+      }
+
+      .status {
+        text-align: center;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        font-weight: bold;
+      }
+
+      .status.connected {
+        background: #d4edda;
+        color: #155724;
+      }
+
+      .status.disconnected {
+        background: #f8d7da;
+        color: #721c24;
+      }
+
+      .current-prize {
+        background: linear-gradient(135deg, #ffcd00 0%, #ffe066 100%);
+        padding: 20px;
+        border-radius: 10px;
+        text-align: center;
+        margin-bottom: 30px;
+        color: #da251d;
+      }
+
+      .current-prize h2 {
+        font-size: 1.5em;
+        margin-bottom: 10px;
+      }
+
+      .current-prize p {
+        font-size: 1.2em;
+      }
+
+      .controls {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+
+      .danger-zone {
+        margin-top: 14px;
+        padding: 14px;
+        border-radius: 12px;
+        border: 1px solid rgba(218, 37, 29, 0.25);
+        background: rgba(218, 37, 29, 0.06);
+      }
+
+      .danger-zone h3 {
+        color: #da251d;
+        font-size: 1.05em;
+        margin-bottom: 10px;
+        font-weight: 900;
+      }
+
+      .danger-controls {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+
+      .danger-controls .btn-wide {
+        grid-column: 1 / -1;
+      }
+
+      .btn-danger {
+        background: linear-gradient(135deg, #b71c1c 0%, #e53935 100%);
+      }
+
+      button {
+        background: linear-gradient(135deg, #da251d 0%, #ff6b5a 100%);
+        color: white;
+        border: none;
+        padding: 20px;
+        border-radius: 10px;
+        font-size: 1.2em;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s;
+        box-shadow: 0 4px 15px rgba(218, 37, 29, 0.3);
+      }
+
+      button:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(218, 37, 29, 0.5);
+      }
+
+      button:active:not(:disabled) {
+        transform: translateY(0);
+      }
+
+      button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .btn-primary {
+        grid-column: 1 / -1;
+        background: linear-gradient(135deg, #ffcd00 0%, #ffe066 100%);
+        color: #da251d;
+        font-size: 1.5em;
+        padding: 25px;
+      }
+
+      .btn-wide {
+        grid-column: 1 / -1;
+      }
+
+      .btn-primary:active:not(:disabled) {
+        animation: pulse 0.3s;
+      }
+
+      @keyframes pulse {
+        0% {
+          transform: scale(1);
         }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #DA251D 0%, #FFCD00 50%, #DA251D 100%);
-            min-height: 100vh;
-            padding: 20px;
+        50% {
+          transform: scale(0.95);
         }
 
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 15px;
-            padding: 30px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        100% {
+          transform: scale(1);
         }
+      }
 
-        h1 {
-            color: #DA251D;
-            text-align: center;
-            margin-bottom: 30px;
-            font-size: 2em;
-        }
+      .btn-secondary {
+        background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+      }
 
-        .status {
-            text-align: center;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            font-weight: bold;
-        }
+      .btn-info {
+        background: linear-gradient(135deg, #0d6efd 0%, #4dabf7 100%);
+      }
 
-        .status.connected {
-            background: #d4edda;
-            color: #155724;
-        }
+      .info {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+        margin-top: 20px;
+      }
 
-        .status.disconnected {
-            background: #f8d7da;
-            color: #721c24;
-        }
+      .info p {
+        margin: 5px 0;
+        color: #666;
+      }
 
-        .current-prize {
-            background: linear-gradient(135deg, #FFCD00 0%, #FFE066 100%);
-            padding: 20px;
-            border-radius: 10px;
-            text-align: center;
-            margin-bottom: 30px;
-            color: #DA251D;
-        }
+      .display-link {
+        text-align: center;
+        margin-top: 20px;
+      }
 
-        .current-prize h2 {
-            font-size: 1.5em;
-            margin-bottom: 10px;
-        }
+      .display-link a {
+        color: #da251d;
+        text-decoration: none;
+        font-weight: bold;
+        font-size: 1.1em;
+      }
 
-        .current-prize p {
-            font-size: 1.2em;
-        }
+      .winners {
+        margin-top: 10px;
+      }
 
-        .controls {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
+      .winners-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 12px;
+      }
 
-        button {
-            background: linear-gradient(135deg, #DA251D 0%, #FF6B5A 100%);
-            color: white;
-            border: none;
-            padding: 20px;
-            border-radius: 10px;
-            font-size: 1.2em;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s;
-            box-shadow: 0 4px 15px rgba(218, 37, 29, 0.3);
-        }
+      .winners-list {
+        max-height: 52vh;
+        overflow: auto;
+        border-radius: 12px;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        background: rgba(255, 255, 255, 0.85);
+        padding: 12px;
+      }
 
-        button:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(218, 37, 29, 0.5);
-        }
+      .winners-prize {
+        padding: 10px 12px;
+        border-radius: 12px;
+        background: rgba(255, 205, 0, 0.18);
+        border: 1px solid rgba(218, 37, 29, 0.18);
+        margin-bottom: 10px;
+      }
 
-        button:active:not(:disabled) {
-            transform: translateY(0);
-        }
+      .winners-prize-title {
+        font-weight: 900;
+        color: #da251d;
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
 
-        button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
+      .winners-items {
+        margin-top: 8px;
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 6px;
+      }
 
-        .btn-primary {
-            grid-column: 1 / -1;
-            background: linear-gradient(135deg, #FFCD00 0%, #FFE066 100%);
-            color: #DA251D;
-            font-size: 1.5em;
-            padding: 25px;
-        }
+      .winner-item {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 8px 10px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.8);
+        border: 1px solid rgba(0, 0, 0, 0.06);
+        font-weight: 700;
+        color: rgba(0, 0, 0, 0.75);
+      }
 
-        .btn-primary:active:not(:disabled) {
-            animation: pulse 0.3s;
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(0.95); }
-            100% { transform: scale(1); }
-        }
-
-        .btn-secondary {
-            background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
-        }
-
-        .info {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 20px;
-        }
-
-        .info p {
-            margin: 5px 0;
-            color: #666;
-        }
-
-        .display-link {
-            text-align: center;
-            margin-top: 20px;
-        }
-
-        .display-link a {
-            color: #DA251D;
-            text-decoration: none;
-            font-weight: bold;
-            font-size: 1.1em;
-        }
+      .winner-item .meta {
+        opacity: 0.8;
+        font-weight: 800;
+        white-space: nowrap;
+      }
     </style>
-</head>
-<body>
+  </head>
+
+  <body>
     <div class="container">
-        <h1>🎮 Điều khiển Quay số</h1>
+      <h1>🎮 Điều khiển Quay số</h1>
 
-        <div id="status" class="status disconnected">Đang kết nối...</div>
+      <div id="status" class="status disconnected">Đang kết nối...</div>
 
-        <div class="current-prize" id="currentPrize">
-            <h2>Giải hiện tại</h2>
-            <p id="prizeName">Đang tải...</p>
-            <p id="prizeCount" style="font-size: 0.9em; margin-top: 10px;">Còn lại: 0</p>
-        </div>
+      <div class="current-prize" id="currentPrize">
+        <h2>Giải hiện tại</h2>
+        <p id="prizeName">Đang tải...</p>
+        <p id="prizeCount" style="font-size: 0.9em; margin-top: 10px">
+          Còn lại: 0
+        </p>
+      </div>
 
+      <div class="tabs">
+        <button class="tab active" onclick="switchTab('controls', event)">
+          Điều khiển
+        </button>
+        <button class="tab" onclick="switchTab('winners', event)">
+          Danh sách trúng
+        </button>
+        <button class="tab tab-danger" onclick="switchTab('danger', event)">
+          Thao tác quan trọng
+        </button>
+      </div>
+
+      <div id="controls" class="tab-content active">
         <div class="controls">
-            <button id="enterBtn" onclick="sendCommand('enter')">Vào Quay số</button>
-            <button id="startBtn" class="btn-primary" onclick="sendCommand('start')">🎲 BẮT ĐẦU QUAY</button>
-            <button id="stopBtn" onclick="sendCommand('stop')" disabled>Dừng Quay</button>
-            <button id="resetBtn" onclick="sendCommand('reset')">Đặt lại</button>
-            <button id="saveBtn" onclick="sendCommand('save')">Lưu kết quả</button>
-            <button id="reLotteryBtn" onclick="sendCommand('reLottery')">Quay lại</button>
+          <button
+            id="startBtn"
+            class="btn-primary"
+            onclick="handlerStartLottery()"
+          >
+          BẮT ĐẦU QUAY (START)
+          </button>
+          <button
+            id="stopBtn"
+            class="btn-wide"
+            onclick="handlerStopLottery()"
+            disabled
+          >
+           + Dừng Quay (STOP)
+          </button>
+
+          <span style="text-align: center; margin: 10px 0"
+            >-----------------------------</span
+          >
+          <button
+            id="reLotteryBtn"
+            class="btn-wide btn-secondary"
+            onclick="sendCommand('reLottery')"
+          >
+            Quay lại số khác
+          </button>
+          <button
+            id="saveResultBtn"
+            class="btn-wide btn-danger"
+            onclick="handlerSaveResult()"
+          >
+            Lưu kết quả
+          </button>
         </div>
 
         <div class="info">
-            <p><strong>Hướng dẫn:</strong></p>
-            <p>• Nhấn "BẮT ĐẦU QUAY" để bắt đầu quay số</p>
-            <p>• Nhấn "Dừng Quay" để dừng quay số</p>
-            <p>• Nhấn "Lưu kết quả" để lưu kết quả đã quay</p>
-            <p>• Mở màn hình hiển thị trên thiết bị khác để xem</p>
+          <p><strong>Hướng dẫn:</strong></p>
+          <p>• Nhấn "BẮT ĐẦU QUAY" để bắt đầu quay số</p>
+          <p>• Nhấn "Dừng Quay" để dừng quay số</p>
+          <p>• Nhấn "Lưu kết quả" để lưu kết quả đã quay</p>
+          <p>• Mở màn hình hiển thị trên thiết bị khác để xem</p>
         </div>
 
         <div class="display-link">
-            <a href="/" target="_blank">📺 Mở màn hình quay số (http://localhost:9000/)</a>
+          <a href="/" target="_blank"
+            >📺 Mở màn hình quay số (http://localhost:9000/)</a
+          >
         </div>
+      </div>
+
+      <div id="winners" class="tab-content">
+        <div class="winners">
+          <div class="winners-actions">
+            <button class="btn-secondary" onclick="loadWinners()">
+              Tải danh sách
+            </button>
+            <button class="btn-secondary" onclick="expandAll()">
+              Mở rộng tất cả
+            </button>
+            <button class="btn-secondary" onclick="collapseAll()">
+              Thu gọn tất cả
+            </button>
+          </div>
+          <div id="winnersList" class="winners-list">
+            <div style="opacity: 0.7; font-weight: 700">Chưa tải dữ liệu.</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="danger" class="tab-content">
+        <div class="danger-zone">
+          <h3>Thao tác quan trọng</h3>
+          <div class="danger-controls">
+            <button id="saveBtn" class="btn-secondary" onclick="exportExcel()">
+              Lưu kết quả
+            </button>
+            <button
+              id="resetBtn"
+              class="btn-danger"
+              onclick="handlerReset()"
+            >
+              Đặt lại
+            </button>
+            <button
+              id="refreshBtn"
+              class="btn-danger"
+              onclick="sendCommand('refresh')"
+            >
+              Làm mới
+            </button>
+          </div>
+          <div class="info" style="margin-top: 12px">
+            <p><strong>Lưu ý:</strong></p>
+            <p>• "Đặt lại" sẽ xóa toàn bộ kết quả đã quay</p>
+            <p>• "Lưu kết quả" sẽ xuất file Excel</p>
+            <p>
+              • "Kết thúc & Lưu" dùng khi không quay tiếp (tự dừng nếu đang quay)
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
 
     <script>
-        let ws = null;
-        let reconnectInterval = null;
+      let ws = null;
+      let reconnectInterval = null;
 
-        function connect() {
-            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            // Kết nối đến server backend (port 18888 trong dev, 8090 trong production)
-            const port = window.location.port === '9000' ? 18888 : (window.location.port || 8090);
-            const wsUrl = `${protocol}//${window.location.hostname}:${port}`;
-            
-            console.log('Controller connecting to WebSocket:', wsUrl);
-            ws = new WebSocket(wsUrl);
+      function connect() {
+        const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+        // Kết nối đến server backend (port 18888 trong dev, 8090 trong production)
+        const port =
+          window.location.port === "9000"
+            ? 18888
+            : window.location.port || 8090;
+        const wsUrl = `${protocol}//${window.location.hostname}:${port}`;
 
-            ws.onopen = () => {
-                updateStatus(true);
-                console.log('WebSocket connected');
-                // Clear any pending reconnection
-                if (reconnectInterval) {
-                    clearTimeout(reconnectInterval);
-                    reconnectInterval = null;
-                }
+        console.log("Controller connecting to WebSocket:", wsUrl);
+        ws = new WebSocket(wsUrl);
+
+        ws.onopen = () => {
+          updateStatus(true);
+          console.log("WebSocket connected");
+          // Clear any pending reconnection
+          if (reconnectInterval) {
+            clearTimeout(reconnectInterval);
+            reconnectInterval = null;
+          }
+        };
+
+        ws.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            handleMessage(data);
+          } catch (error) {
+            console.error("Error parsing WebSocket message:", error);
+          }
+        };
+
+        ws.onclose = () => {
+          updateStatus(false);
+          console.log("WebSocket disconnected");
+          // Clear existing reconnection if any
+          if (reconnectInterval) {
+            clearTimeout(reconnectInterval);
+          }
+          // Reconnect after 3 seconds
+          reconnectInterval = setTimeout(connect, 3000);
+        };
+
+        ws.onerror = (error) => {
+          console.error("WebSocket error:", error);
+          updateStatus(false);
+        };
+      }
+
+      function updateStatus(connected) {
+        const status = document.getElementById("status");
+        if (connected) {
+          status.textContent = "✅ Đã kết nối";
+          status.className = "status connected";
+        } else {
+          status.textContent = "❌ Mất kết nối - Đang thử kết nối lại...";
+          status.className = "status disconnected";
+        }
+      }
+
+      function switchTab(tabName, ev) {
+        document
+          .querySelectorAll(".tab")
+          .forEach((t) => t.classList.remove("active"));
+        document
+          .querySelectorAll(".tab-content")
+          .forEach((c) => c.classList.remove("active"));
+        if (ev && ev.target) ev.target.classList.add("active");
+        const el = document.getElementById(tabName);
+        el && el.classList.add("active");
+        if (tabName === "winners") loadWinners();
+      }
+
+      function sendCommand(command) {
+        if (!ws || ws.readyState !== WebSocket.OPEN) {
+          alert("Chưa kết nối đến server!");
+          return;
+        }
+
+        if (command === "start") {
+          document.getElementById("startBtn").disabled = true;
+          document.getElementById("stopBtn").disabled = false;
+        }
+
+        if (command === "stop") {
+          document.getElementById("startBtn").disabled = false;
+          document.getElementById("stopBtn").disabled = true;
+          document.getElementById("saveResultBtn").disabled = false;
+          document.getElementById("reLotteryBtn").disabled = false;
+        }
+
+        if (command === "reLottery") {
+          // ưu tiên đưa UI về trạng thái có thể Dừng
+          document.getElementById("startBtn").disabled = true;
+          document.getElementById("stopBtn").disabled = false;
+        }
+
+        ws.send(JSON.stringify({ type: "command", action: command }));
+      }
+
+      async function exportExcel() {
+        // Gửi command save qua WebSocket để lưu dữ liệu trên trang lottery
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          sendCommand("save");
+          // Đợi một chút để dữ liệu được lưu
+          await new Promise((r) => setTimeout(r, 500));
+        }
+
+        // Gọi trực tiếp API export để tạo file Excel
+        try {
+          const response = await fetch("/export", { method: "POST" });
+          const data = await response.json();
+
+          if (data.type === "success" && data.url) {
+            // Mở file sau khi đã tạo thành công
+            window.open(data.url, "_blank");
+          } else {
+            alert("Lỗi khi xuất file: " + (data.error || "Không xác định"));
+          }
+        } catch (error) {
+          console.error("Error exporting file:", error);
+          alert("Lỗi khi xuất file: " + error.message);
+        }
+      }
+
+      function handlerStartLottery() {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+            sendCommand('start');
+            // enable button
+            document.getElementById("startBtn").disabled = true;
+            document.getElementById("stopBtn").disabled = false;
+            document.getElementById("saveResultBtn").disabled = true;
+            document.getElementById("reLotteryBtn").disabled = true;
+        }
+      }
+
+      function handlerStopLottery() {
+        sendCommand('stop');
+        // enable button
+        document.getElementById("startBtn").disabled = false;
+        document.getElementById("stopBtn").disabled = true;
+        document.getElementById("saveResultBtn").disabled = false;
+        document.getElementById("reLotteryBtn").disabled = false;
+      }
+
+      async function finishAndSave() {
+        // nếu đang quay thì dừng trước, rồi lưu
+        const stopBtn = document.getElementById("stopBtn");
+        const isLotting = stopBtn && !stopBtn.disabled;
+
+        if (isLotting) {
+          sendCommand("stop");
+          // chờ animation/ghi nhận kết quả
+          await new Promise((r) => setTimeout(r, 1200));
+        }
+      }
+
+      async function handlerSaveResult() {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          sendCommand("save-result");
+        }
+
+        // enable button
+        document.getElementById("startBtn").disabled = false;
+        document.getElementById("stopBtn").disabled = true;
+        document.getElementById("reLotteryBtn").disabled = true;
+        document.getElementById("saveResultBtn").disabled = true;
+      }
+
+      function handlerReset() {
+        const ok = confirm(
+          "Bạn có chắc muốn ĐẶT LẠI không?\n\nThao tác này sẽ xóa toàn bộ kết quả đã quay."
+        );
+        if (!ok) return;
+        sendCommand("reset");
+      }
+
+      function handleMessage(data) {
+        switch (data.type) {
+          case "prizeUpdate":
+            updatePrizeInfo(data.prize);
+            break;
+          case "status":
+            updateButtons(data.status);
+            break;
+          case "error":
+            alert("Lỗi: " + data.message);
+            break;
+        }
+      }
+
+      function updatePrizeInfo(prize) {
+        document.getElementById("prizeName").textContent = prize
+          ? `${prize.text} - ${prize.title}`
+          : "Chưa có giải";
+        document.getElementById("prizeCount").textContent = prize
+          ? `Còn lại: ${prize.count}`
+          : "";
+      }
+
+      function updateButtons(status) {
+        document.getElementById("startBtn").disabled = status.isLotting;
+        document.getElementById("stopBtn").disabled = !status.isLotting;
+
+        // Khi dừng quay (isLotting=false) thì cho phép Lưu kết quả / Quay lại số khác
+        document.getElementById("saveResultBtn").disabled = status.isLotting;
+        document.getElementById("reLotteryBtn").disabled = status.isLotting;
+      }
+
+      // Load initial prize info
+      async function loadPrizeInfo() {
+        try {
+          const response = await fetch("/getTempData", { method: "POST" });
+          const data = await response.json();
+          if (data.cfgData && data.cfgData.prizes) {
+            const currentPrize =
+              data.cfgData.prizes[data.cfgData.prizes.length - 1];
+            updatePrizeInfo(currentPrize);
+          }
+        } catch (error) {
+          console.error("Error loading prize info:", error);
+        }
+        
+      }
+
+      let winnersCache = [];
+      async function loadWinners() {
+        const box = document.getElementById("winnersList");
+        if (!box) return;
+        box.innerHTML =
+          '<div style="opacity:0.7; font-weight:700;">Đang tải...</div>';
+        try {
+          const response = await fetch("/api/winners");
+          const data = await response.json();
+          if (!data.success) {
+            box.innerHTML = `<div style="color:#b71c1c; font-weight:800;">Lỗi: ${
+              data.error || "Không tải được"
+            }</div>`;
+            return;
+          }
+
+          winnersCache = data.prizes || [];
+          if (!winnersCache.length) {
+            box.innerHTML =
+              '<div style="opacity:0.7; font-weight:700;">Chưa có dữ liệu trúng thưởng.</div>';
+            return;
+          }
+
+          box.innerHTML = "";
+          winnersCache.forEach((p) => {
+            const winners = Array.isArray(p.winners) ? p.winners : [];
+            const wrap = document.createElement("div");
+            wrap.className = "winners-prize";
+            wrap.dataset.open = "1";
+
+            const head = document.createElement("div");
+            head.className = "winners-prize-title";
+            head.innerHTML = `<span>${p.text || ""} ${
+              p.title || ""
+            }</span><span>${winners.length}/${p.count}</span>`;
+            head.style.cursor = "pointer";
+            head.onclick = () => {
+              const open = wrap.dataset.open === "1";
+              wrap.dataset.open = open ? "0" : "1";
+              items.style.display = open ? "none" : "grid";
             };
 
-            ws.onmessage = (event) => {
-                try {
-                    const data = JSON.parse(event.data);
-                    handleMessage(data);
-                } catch (error) {
-                    console.error('Error parsing WebSocket message:', error);
-                }
-            };
+            const items = document.createElement("div");
+            items.className = "winners-items";
+            winners.forEach((u) => {
+              const row = document.createElement("div");
+              row.className = "winner-item";
+              const id = u && u[0] ? u[0] : "";
+              const name = u && u[1] ? u[1] : "";
+              const dept = u && u[2] ? u[2] : "";
+              row.innerHTML = `<span>${name}</span><span class="meta">${id}${
+                dept ? " · " + dept : ""
+              }</span>`;
+              items.appendChild(row);
+            });
 
-            ws.onclose = () => {
-                updateStatus(false);
-                console.log('WebSocket disconnected');
-                // Clear existing reconnection if any
-                if (reconnectInterval) {
-                    clearTimeout(reconnectInterval);
-                }
-                // Reconnect after 3 seconds
-                reconnectInterval = setTimeout(connect, 3000);
-            };
-
-            ws.onerror = (error) => {
-                console.error('WebSocket error:', error);
-                updateStatus(false);
-            };
+            wrap.appendChild(head);
+            wrap.appendChild(items);
+            box.appendChild(wrap);
+          });
+        } catch (error) {
+          box.innerHTML = `<div style="color:#b71c1c; font-weight:800;">Lỗi: ${error.message}</div>`;
         }
+      }
 
-        function updateStatus(connected) {
-            const status = document.getElementById('status');
-            if (connected) {
-                status.textContent = '✅ Đã kết nối';
-                status.className = 'status connected';
-            } else {
-                status.textContent = '❌ Mất kết nối - Đang thử kết nối lại...';
-                status.className = 'status disconnected';
-            }
+      function expandAll() {
+        document.querySelectorAll(".winners-prize").forEach((wrap) => {
+          wrap.dataset.open = "1";
+          const items = wrap.querySelector(".winners-items");
+          if (items) items.style.display = "grid";
+        });
+      }
+
+      function collapseAll() {
+        document.querySelectorAll(".winners-prize").forEach((wrap) => {
+          wrap.dataset.open = "0";
+          const items = wrap.querySelector(".winners-items");
+          if (items) items.style.display = "none";
+        });
+      }
+
+      function init() {
+        document.getElementById("reLotteryBtn").disabled = true;
+        document.getElementById("saveResultBtn").disabled = true;
+      }
+
+      // Initialize
+      init();
+      connect();
+      loadPrizeInfo();
+
+     
+
+      // Keep connection alive
+      setInterval(() => {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ type: "ping" }));
         }
-
-        function sendCommand(command) {
-            if (!ws || ws.readyState !== WebSocket.OPEN) {
-                alert('Chưa kết nối đến server!');
-                return;
-            }
-
-            ws.send(JSON.stringify({ type: 'command', action: command }));
-        }
-
-        function handleMessage(data) {
-            switch(data.type) {
-                case 'prizeUpdate':
-                    updatePrizeInfo(data.prize);
-                    break;
-                case 'status':
-                    updateButtons(data.status);
-                    break;
-                case 'error':
-                    alert('Lỗi: ' + data.message);
-                    break;
-            }
-        }
-
-        function updatePrizeInfo(prize) {
-            document.getElementById('prizeName').textContent = prize ? `${prize.text} - ${prize.title}` : 'Chưa có giải';
-            document.getElementById('prizeCount').textContent = prize ? `Còn lại: ${prize.count}` : '';
-        }
-
-        function updateButtons(status) {
-            document.getElementById('startBtn').disabled = status.isLotting;
-            document.getElementById('stopBtn').disabled = !status.isLotting;
-        }
-
-        // Load initial prize info
-        async function loadPrizeInfo() {
-            try {
-                const response = await fetch('/getTempData', { method: 'POST' });
-                const data = await response.json();
-                if (data.cfgData && data.cfgData.prizes) {
-                    const currentPrize = data.cfgData.prizes[data.cfgData.prizes.length - 1];
-                    updatePrizeInfo(currentPrize);
-                }
-            } catch (error) {
-                console.error('Error loading prize info:', error);
-            }
-        }
-
-        // Initialize
-        connect();
-        loadPrizeInfo();
-
-        // Keep connection alive
-        setInterval(() => {
-            if (ws && ws.readyState === WebSocket.OPEN) {
-                ws.send(JSON.stringify({ type: 'ping' }));
-            }
-        }, 30000);
+      }, 30000);
     </script>
-</body>
+  </body>
 </html>
-

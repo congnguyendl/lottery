@@ -62,7 +62,7 @@ function loadXML(xmlPath) {
 function writeXML(data, name) {
   let buffer = xlsx.build([
     {
-      name: "Kết quả quay số",
+      name: "ket-qua-quay-so-so",
       data: data
     }
   ]);
@@ -137,11 +137,71 @@ function shuffle(arr) {
   }
 }
 
+/**
+ * Lưu/đọc cấu hình giải thưởng ra file để không bị reset khi restart/reset.
+ */
+function loadPrizeConfig() {
+  return new Promise((resolve) => {
+    fs.readFile(path.join(cwd, "prizes.json"), "utf8", (err, data) => {
+      if (err) return resolve(null);
+      try {
+        resolve(JSON.parse(data));
+      } catch (e) {
+        resolve(null);
+      }
+    });
+  });
+}
+
+function savePrizeConfig(data) {
+  const json = JSON.stringify(data, "", 2);
+  if (!fs.existsSync(cwd)) {
+    fs.mkdirSync(cwd);
+  }
+  return new Promise((resolve, reject) => {
+    fs.writeFile(path.join(cwd, "prizes.json"), json, (err) => {
+      if (err) return reject(err);
+      resolve();
+    });
+  });
+}
+
 module.exports = {
   loadTempData,
   loadXML,
   shuffle,
   writeXML,
   saveDataFile,
-  saveErrorDataFile
+  saveErrorDataFile,
+  loadPrizeConfig,
+  savePrizeConfig
 };
+
+/**
+ * Lưu/đọc cấu hình giải thưởng ra file để không bị reset khi restart/reset.
+ */
+function loadPrizeConfig() {
+  return new Promise((resolve) => {
+    fs.readFile(path.join(cwd, "prizes.json"), "utf8", (err, data) => {
+      if (err) return resolve(null);
+      try {
+        resolve(JSON.parse(data));
+      } catch (e) {
+        resolve(null);
+      }
+    });
+  });
+}
+
+function savePrizeConfig(data) {
+  const json = JSON.stringify(data, "", 2);
+  if (!fs.existsSync(cwd)) {
+    fs.mkdirSync(cwd);
+  }
+  return new Promise((resolve, reject) => {
+    fs.writeFile(path.join(cwd, "prizes.json"), json, (err) => {
+      if (err) return reject(err);
+      resolve();
+    });
+  });
+}
