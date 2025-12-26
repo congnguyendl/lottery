@@ -62,6 +62,32 @@ let tickerLive = {
 function initTickerLive() {
   if (tickerLive.el) return;
 
+  const el = document.createElement('div');
+  el.id = 'tickerLiveName';
+  el.style.cssText = [
+    'position:fixed',
+    'left:50%',
+    'top:50%',
+    'transform:translate(-50%,-50%)',
+    'z-index:8',
+    'pointer-events:none',
+    'padding:12px 18px',
+    'border-radius:16px',
+    'font-size:3.2vh',
+    'font-weight:900',
+    'color: transparent !important',
+    'background: transparent !important',
+    'border: none !important',
+    'box-shadow: none !important',
+    'max-width: min(1000px, calc(100vw - 120px))',
+    'overflow: hidden',
+    'text-overflow: ellipsis',
+    'white-space: nowrap',
+    'opacity: 0',
+    'transition: opacity 120ms ease'
+  ].join(';');
+  document.body.appendChild(el);
+  tickerLive.el = el;
 
   const list = document.createElement('div');
   list.id = 'tickerLiveList';
@@ -88,8 +114,12 @@ function initTickerLive() {
 }
 
 function resetTickerLive() {
-  // clear ticker list
-  
+  if (tickerLive.el) {
+    tickerLive.el.textContent = '';
+  }
+  if (tickerLive.listEl) {
+    tickerLive.listEl.innerHTML = '';
+  }
 }
 
 function setTickerLiveActive(active) {
@@ -352,8 +382,12 @@ function handleRemoteCommand(action) {
         // Xóa bản ghi trước đó
         currentLuckys = [];
       });
+      
       addQipao(`Dữ liệu đã được lưu vào EXCEL.`);
     });
+    addHighlight();
+    resetCard();
+    switchScreen("enter");
     // reload page
     //window.location.reload();
     return;

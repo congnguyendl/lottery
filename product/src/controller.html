@@ -180,8 +180,8 @@
 
       .btn-primary {
         grid-column: 1 / -1;
-        background: linear-gradient(135deg, #ffcd00 0%, #ffe066 100%);
-        color: #da251d;
+        background: linear-gradient(135deg, #0d6efd 0%, #4dabf7 100%);
+        color: #d4edda;
         font-size: 1.5em;
         padding: 25px;
       }
@@ -310,14 +310,6 @@
 
       <div id="status" class="status disconnected">Đang kết nối...</div>
 
-      <div class="current-prize" id="currentPrize">
-        <h2>Giải hiện tại</h2>
-        <p id="prizeName">Đang tải...</p>
-        <p id="prizeCount" style="font-size: 0.9em; margin-top: 10px">
-          Còn lại: 0
-        </p>
-      </div>
-
       <div class="tabs">
         <button class="tab active" onclick="switchTab('controls', event)">
           Điều khiển
@@ -337,7 +329,7 @@
             class="btn-primary"
             onclick="handlerStartLottery()"
           >
-          BẮT ĐẦU QUAY (START)
+            BẮT ĐẦU QUAY (START)
           </button>
           <button
             id="stopBtn"
@@ -345,25 +337,25 @@
             onclick="handlerStopLottery()"
             disabled
           >
-           + Dừng Quay (STOP)
+            DỪNG QUAY (STOP)
           </button>
 
           <span style="text-align: center; margin: 10px 0"
             >-----------------------------</span
           >
           <button
-            id="reLotteryBtn"
-            class="btn-wide btn-secondary"
-            onclick="sendCommand('reLottery')"
-          >
-            Quay lại số khác
-          </button>
-          <button
             id="saveResultBtn"
             class="btn-wide btn-danger"
             onclick="handlerSaveResult()"
           >
             Lưu kết quả
+          </button>
+          <button
+            id="reLotteryBtn"
+            class="btn-wide btn-secondary"
+            onclick="sendCommand('reLottery')"
+          >
+            Quay lại số khác
           </button>
         </div>
 
@@ -372,13 +364,6 @@
           <p>• Nhấn "BẮT ĐẦU QUAY" để bắt đầu quay số</p>
           <p>• Nhấn "Dừng Quay" để dừng quay số</p>
           <p>• Nhấn "Lưu kết quả" để lưu kết quả đã quay</p>
-          <p>• Mở màn hình hiển thị trên thiết bị khác để xem</p>
-        </div>
-
-        <div class="display-link">
-          <a href="/" target="_blank"
-            >📺 Mở màn hình quay số (http://localhost:9000/)</a
-          >
         </div>
       </div>
 
@@ -408,11 +393,7 @@
             <button id="saveBtn" class="btn-secondary" onclick="exportExcel()">
               Lưu kết quả
             </button>
-            <button
-              id="resetBtn"
-              class="btn-danger"
-              onclick="handlerReset()"
-            >
+            <button id="resetBtn" class="btn-danger" onclick="handlerReset()">
               Đặt lại
             </button>
             <button
@@ -428,7 +409,8 @@
             <p>• "Đặt lại" sẽ xóa toàn bộ kết quả đã quay</p>
             <p>• "Lưu kết quả" sẽ xuất file Excel</p>
             <p>
-              • "Kết thúc & Lưu" dùng khi không quay tiếp (tự dừng nếu đang quay)
+              • "Kết thúc & Lưu" dùng khi không quay tiếp (tự dừng nếu đang
+              quay)
             </p>
           </div>
         </div>
@@ -565,17 +547,17 @@
 
       function handlerStartLottery() {
         if (ws && ws.readyState === WebSocket.OPEN) {
-            sendCommand('start');
-            // enable button
-            document.getElementById("startBtn").disabled = true;
-            document.getElementById("stopBtn").disabled = false;
-            document.getElementById("saveResultBtn").disabled = true;
-            document.getElementById("reLotteryBtn").disabled = true;
+          sendCommand("start");
+          // enable button
+          document.getElementById("startBtn").disabled = true;
+          document.getElementById("stopBtn").disabled = false;
+          document.getElementById("saveResultBtn").disabled = true;
+          document.getElementById("reLotteryBtn").disabled = true;
         }
       }
 
       function handlerStopLottery() {
-        sendCommand('stop');
+        sendCommand("stop");
         // enable button
         document.getElementById("startBtn").disabled = false;
         document.getElementById("stopBtn").disabled = true;
@@ -660,7 +642,6 @@
         } catch (error) {
           console.error("Error loading prize info:", error);
         }
-        
       }
 
       let winnersCache = [];
@@ -753,8 +734,6 @@
       init();
       connect();
       loadPrizeInfo();
-
-     
 
       // Keep connection alive
       setInterval(() => {

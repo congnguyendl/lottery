@@ -79,6 +79,42 @@ function writeXML(data, name) {
 }
 
 /**
+ * Lưu danh sách user vào file Excel
+ * @param {Array} users - Mảng các user (mỗi user là mảng [mã, họ tên, phòng ban])
+ * @param {string} filePath - Đường dẫn file để lưu
+ */
+function saveUsersFile(users, filePath) {
+  // Thêm header vào đầu
+  const dataWithHeader = [
+    ["Mã nhân viên", "Họ tên", "Phòng ban"],
+    ...users
+  ];
+
+  let buffer = xlsx.build([
+    {
+      name: "users",
+      data: dataWithHeader
+    }
+  ]);
+
+  return new Promise((resolve, reject) => {
+    // Đảm bảo thư mục tồn tại
+    const dir = path.dirname(filePath);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+
+    fs.writeFile(filePath, buffer, err => {
+      if (err) {
+        reject(err);
+        return;
+      }
+      resolve();
+    });
+  });
+}
+
+/**
  * Ghi vào file
  * @param {*} data
  */
@@ -174,7 +210,8 @@ module.exports = {
   saveDataFile,
   saveErrorDataFile,
   loadPrizeConfig,
-  savePrizeConfig
+  savePrizeConfig,
+  saveUsersFile
 };
 
 /**

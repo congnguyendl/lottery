@@ -16,7 +16,8 @@ const {
   shuffle,
   saveErrorDataFile,
   loadPrizeConfig,
-  savePrizeConfig
+  savePrizeConfig,
+  saveUsersFile
 } = require("./help");
 
 let app = express(),
@@ -132,21 +133,39 @@ router.post("/getPrizes", (req, res, next) => {
 });
 
 // API: Upload users
-router.post("/api/uploadUsers", upload.single("file"), (req, res, next) => {
+router.post("/api/uploadUsers", upload.single("file"), async (req, res, next) => {
   if (!req.file) {
     return res.json({ success: false, error: "Không có file được upload" });
   }
   try {
+    // Đọc dữ liệu từ file upload
     const users = loadXML(req.file.path);
+    
+    // Xóa dữ liệu cũ: reset luckyData và errorData
+    luckyData = {};
+    errorData = [];
+    
+    // Lưu dữ liệu đã reset vào file
+    await saveDataFile(luckyData);
+    await saveErrorDataFile(errorData);
+    
+    // Lưu danh sách user mới vào file Excel
+    const usersFilePath = path.join(dataBath, "data/users.xlsx");
+    await saveUsersFile(users, usersFilePath);
+    
+    // Cập nhật dữ liệu trong memory
     curData.users = users;
     shuffle(curData.users);
     curData.leftUsers = Object.assign([], curData.users);
+    
     // Clean up uploaded file
     fs.unlinkSync(req.file.path);
+    
     res.json({ success: true, count: users.length });
-    log(`Upload ${users.length} người tham gia thành công`);
+    log(`Upload ${users.length} người tham gia thành công. Đã xóa dữ liệu cũ và lưu vào file.`);
   } catch (error) {
     res.json({ success: false, error: error.message });
+    log(`Lỗi khi upload users: ${error.message}`);
   }
 });
 
