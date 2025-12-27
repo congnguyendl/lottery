@@ -1,15 +1,29 @@
 version: '3.8'
 
-volumes:
-  lottery_log:
 services:
   lottery:
     container_name: lottery
-    expose:
-      - 28458
+    image: "nguyendalatdev/lottery"
+    # Hoặc build từ source:
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile
     ports:
       - "28458:8888"
     volumes:
-      - "lottery_log:/var/log"
-    image: "panda1024/lottery:v0.3"
+      # Mount thư mục data để lưu danh sách user
+      - ./server/data:/lottery/server/data
+      # Mount thư mục cache để lưu kết quả quay số và cấu hình
+      - ./server/cache:/lottery/server/cache
+      # Mount thư mục uploads để lưu file upload
+      - ./server/uploads:/lottery/server/uploads
     restart: always
+    environment:
+      - NODE_ENV=production
+    # Health check (optional)
+    # healthcheck:
+    #   test: ["CMD", "curl", "-f", "http://localhost:8888/"]
+    #   interval: 30s
+    #   timeout: 10s
+    #   retries: 3
+    #   start_period: 40s

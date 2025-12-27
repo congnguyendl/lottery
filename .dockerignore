@@ -1,0 +1,43 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Build outputs
+product/dist/
+*.tar.gz
+
+# Cache và data (sẽ mount từ host)
+server/cache/
+server/data/
+server/uploads/
+
+# Logs
+logs/
+*.log
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Documentation
+README.md
+*.md
+
+# Scripts không cần trong container
+dev.sh
+build.sh
+tagpush.sh
+Makefile
+
+ket-qua-quay-so-so.xlsx
+

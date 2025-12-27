@@ -1,5 +1,5 @@
-# Use the official Node.js 16 image as base image
-FROM node:16.14.0-buster
+# Use Node.js 18 LTS (không cần openssl-legacy-provider)
+FROM node:18-alpine
 
 # Upgrade npm to the latest version
 RUN npm install -g npm@9.6.2
@@ -7,27 +7,47 @@ RUN npm install -g npm@9.6.2
 # Set the author of the Dockerfile
 LABEL maintainer="YIN"
 
-# Add the application source code to the container
-ADD lottery.tar.gz  /
-
-# Set the working directory to the root directory of the application
+# Set working directory
 WORKDIR /lottery
 
-# Set the ownership of the application directory to root
-RUN chown -R root /lottery \
-    # Remove the line that opens the default browser when starting the server
-    && sed -i '/openBrowser/ d' ./server/server.js \
-    # Install dependencies for the server and product directories
-    && cd server && npm install \
-    && cd ../product && npm install \
-    # Build the application
-    && npm run build
+# Copy package files first for better layer caching
+COPY server/package*.json ./server/
+COPY product/package*.json ./product/
 
-# Expose port 8080 to the outside world
-EXPOSE 8080
+# Install server dependencies
+WORKDIR /lottery/server
+RUN npm install --production=false
 
-# Set the working directory to the product directory
+# Install product dependencies
+WORKDIR /lottery/product
+RUN npm install
+
+# Copy source code
+WORKDIR /lottery
+COPY server/ ./server/
+COPY product/ ./product/
+
+# Remove the line that opens the default browser when starting the server
+RUN sed -i '/openBrowser/ d' ./server/server.js || true
+
+# Build the application
+# Với Node.js 18, thử build trực tiếp (có thể không cần openssl-legacy-provider)
+# Nếu cần, dùng node với flag trực tiếp thay vì NODE_OPTIONS
+WORKDIR /lottery/product
+RUN node --openssl-legacy-provider ./node_modules/.bin/webpack --mode=production --progress --colors
+
+# Create necessary directories
+RUN mkdir -p /lottery/server/data \
+    && mkdir -p /lottery/server/cache \
+    && mkdir -p /lottery/server/uploads
+
+# Expose port 8888 (server chạy ở port này)
+EXPOSE 8888
+
+# Set the working directory to the product directory (where dist is)
 WORKDIR /lottery/product
 
 # Start the server
+# npm run serve -> cd dist && node ../../server/index.js 8888
+# This will serve static files from /lottery/product/dist
 CMD ["npm", "run", "serve"]
