@@ -1,7 +1,7 @@
 {
   "name": "lucky",
   "version": "1.0.0",
-  "description": "Quay số trúng thưởng",
+  "description": "Lucky Draw",
   "main": "index.js",
   "scripts": {
     "start": "cd dist && node ../../server/index.js 8888",

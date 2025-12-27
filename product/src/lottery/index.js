@@ -190,7 +190,7 @@ function setTickerLiveList(ids) {
       'font-size:2.2vh',
       'font-weight:900',
       'color:rgba(255,255,255,0.96)',
-      'background:linear-gradient(135deg, rgba(0,170,184,0.85) 0%, rgba(0,124,138,0.78) 100%)',
+      'background:linear-gradient(135deg, rgba(255, 0, 0, 0.85) 0%, rgba(255, 0, 0, 0.85) 0%)',
       'backdrop-filter:blur(10px)',
       'border:1px solid rgba(255,255,255,0.20)',
       'box-shadow:0 12px 30px rgba(0,0,0,0.28)',
@@ -263,6 +263,7 @@ let selectedCardIndex = [],
   currentLuckys = [];
 
 initAll();
+initVisualEffects();
 
 // WebSocket connection for remote control
 let ws = null;
@@ -1050,6 +1051,9 @@ function selectCard(duration = 600) {
     names: text.join(" · "),
     prize: `Trúng: ${currentPrize.title}`
   });
+  
+  // Hiệu ứng pháo hoa khi công bố kết quả
+  startFireworks();
 
   selectedCardIndex.forEach((cardIndex, index) => {
     changeCard(cardIndex, currentLuckys[index]);
@@ -1322,6 +1326,196 @@ function createHighlight() {
   });
 
   return highlight;
+}
+
+/**
+ * Khởi tạo các hiệu ứng visual
+ */
+function initVisualEffects() {
+  // Tạo floating particles nền
+  createFloatingParticles();
+  
+  // Thêm sparkles khi hover vào buttons
+  addButtonSparkles();
+}
+
+/**
+ * Tạo floating particles trên background
+ */
+function createFloatingParticles() {
+  const particlesContainer = document.createElement('div');
+  particlesContainer.className = 'floating-particles';
+  document.body.appendChild(particlesContainer);
+  
+  const particleCount = 30;
+  
+  for (let i = 0; i < particleCount; i++) {
+    const particle = document.createElement('div');
+    particle.className = 'particle';
+    
+    const size = Math.random() * 8 + 4; // 4-12px
+    const startX = Math.random() * window.innerWidth;
+    const startY = Math.random() * window.innerHeight;
+    const delay = Math.random() * 20;
+    
+    particle.style.width = size + 'px';
+    particle.style.height = size + 'px';
+    particle.style.left = startX + 'px';
+    particle.style.top = startY + 'px';
+    particle.style.animationDelay = delay + 's';
+    particle.style.opacity = Math.random() * 0.5 + 0.2;
+    
+    particlesContainer.appendChild(particle);
+  }
+}
+
+/**
+ * Thêm hiệu ứng sparkles khi hover vào buttons
+ */
+function addButtonSparkles() {
+  const buttons = document.querySelectorAll('button');
+  
+  buttons.forEach(button => {
+    button.addEventListener('mouseenter', (e) => {
+      createSparkles(e.target);
+    });
+  });
+}
+
+/**
+ * Tạo sparkles tại vị trí button
+ */
+function createSparkles(element) {
+  const rect = element.getBoundingClientRect();
+  const sparkleCount = 8;
+  
+  for (let i = 0; i < sparkleCount; i++) {
+    const sparkle = document.createElement('div');
+    sparkle.className = 'sparkle';
+    
+    const x = Math.random() * rect.width;
+    const y = Math.random() * rect.height;
+    const delay = Math.random() * 0.3;
+    
+    sparkle.style.left = (rect.left + x) + 'px';
+    sparkle.style.top = (rect.top + y) + 'px';
+    sparkle.style.animationDelay = delay + 's';
+    
+    document.body.appendChild(sparkle);
+    
+    setTimeout(() => {
+      sparkle.remove();
+    }, 600);
+  }
+}
+
+/**
+ * Hiệu ứng pháo hoa khi công bố kết quả trúng giải
+ */
+function startFireworks() {
+  const colors = [
+    '#FFD700', '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', 
+    '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E2', '#F8B739',
+    '#FF1493', '#00CED1', '#FF6347', '#32CD32', '#FF69B4'
+  ];
+  const fireworkCount = 12;
+  const duration = 3000;
+
+  for (let i = 0; i < fireworkCount; i++) {
+    setTimeout(() => {
+      createFirework(colors);
+    }, i * 150);
+  }
+}
+
+function createFirework(colors) {
+  const firework = document.createElement('div');
+  firework.className = 'firework';
+  
+  // Vị trí ngẫu nhiên trên màn hình, tập trung ở giữa
+  const centerX = window.innerWidth / 2;
+  const centerY = window.innerHeight / 2;
+  const spreadX = window.innerWidth * 0.4;
+  const spreadY = window.innerHeight * 0.3;
+  
+  const x = centerX + (Math.random() - 0.5) * spreadX;
+  const y = centerY + (Math.random() - 0.5) * spreadY;
+  
+  firework.style.left = x + 'px';
+  firework.style.top = y + 'px';
+  
+  document.body.appendChild(firework);
+  
+  // Chọn màu chủ đạo cho pháo hoa này
+  const primaryColor = colors[Math.floor(Math.random() * colors.length)];
+  const secondaryColor = colors[Math.floor(Math.random() * colors.length)];
+  
+  // Tạo các hạt pháo hoa với nhiều kích thước
+  const particleCount = 40 + Math.floor(Math.random() * 20);
+  const particles = [];
+  
+  for (let i = 0; i < particleCount; i++) {
+    const particle = document.createElement('div');
+    particle.className = 'firework-particle';
+    
+    // Màu sắc ngẫu nhiên từ bảng màu
+    const color = Math.random() > 0.5 ? primaryColor : secondaryColor;
+    const size = 4 + Math.random() * 6;
+    
+    particle.style.width = size + 'px';
+    particle.style.height = size + 'px';
+    particle.style.backgroundColor = color;
+    particle.style.boxShadow = `0 0 ${size * 2}px ${color}, 0 0 ${size * 4}px ${color}`;
+    
+    const angle = (Math.PI * 2 * i) / particleCount + (Math.random() - 0.5) * 0.5;
+    const velocity = 80 + Math.random() * 80;
+    const vx = Math.cos(angle) * velocity;
+    const vy = Math.sin(angle) * velocity;
+    
+    particle.style.left = '0px';
+    particle.style.top = '0px';
+    firework.appendChild(particle);
+    
+    particles.push({
+      element: particle,
+      vx: vx,
+      vy: vy,
+      x: 0,
+      y: 0,
+      size: size
+    });
+  }
+  
+  // Animation pháo hoa
+  const startTime = Date.now();
+  const animate = () => {
+    const elapsed = Date.now() - startTime;
+    const progress = elapsed / 2500; // 2.5 giây
+    
+    if (progress >= 1) {
+      firework.remove();
+      return;
+    }
+    
+    particles.forEach(particle => {
+      // Vật lý: vận tốc giảm dần, trọng lực tăng dần
+      particle.x += particle.vx * 0.016;
+      particle.y += particle.vy * 0.016 + 60 * progress * progress; // Gravity tăng dần
+      particle.vx *= 0.985; // Friction
+      particle.vy *= 0.985;
+      
+      // Xoay và scale
+      const rotation = progress * 360;
+      const scale = 1 - progress * 0.5;
+      
+      particle.element.style.transform = `translate(${particle.x}px, ${particle.y}px) rotate(${rotation}deg) scale(${scale})`;
+      particle.element.style.opacity = Math.max(0, 1 - progress * 1.2);
+    });
+    
+    requestAnimationFrame(animate);
+  };
+  
+  animate();
 }
 
 // Background music functionality has been removed as requested

@@ -174,7 +174,7 @@ function showPrizeList(currentPrizeIndex) {
   if (currentPrize.type === defaultType) {
     currentPrize.count === "Không giới hạn";
   }
-  let htmlCode = `<div class="prize-mess">Đang quay<label id="prizeType" class="prize-shine">${currentPrize.text}</label><label id="prizeText" class="prize-shine">${currentPrize.title}</label>，quay/lần<label id="prizePerDraw" class="prize-shine">1</label>，còn lại<label id="prizeLeft" class="prize-shine">${currentPrize.count}</label>giải</div><ul class="prize-list">`;
+  let htmlCode = `<div class="prize-mess">Đang quay<label id="prizeType" class="prize-shine">${currentPrize.text}</label><label id="prizeText" class="prize-shine">${currentPrize.title}</label></div><ul class="prize-list">`;
   prizes.forEach(item => {
     if (item.type === defaultType) {
       return true;
@@ -235,9 +235,7 @@ let setPrizeData = (function () {
 
     if (!prizeElement.prizeType) {
       prizeElement.prizeType = document.querySelector("#prizeType");
-      prizeElement.prizeLeft = document.querySelector("#prizeLeft");
       prizeElement.prizeText = document.querySelector("#prizeText");
-      prizeElement.prizePerDraw = document.querySelector("#prizePerDraw");
     }
 
     if (isInit) {
@@ -260,20 +258,12 @@ let setPrizeData = (function () {
       prizeElement.prizeType.textContent = currentPrize.text;
       prizeElement.prizeText.textContent = currentPrize.title;
 
-      // hiển thị số lượng quay mỗi lần (EACH_COUNT) do index.js set từ ngoài
-      if (prizeElement.prizePerDraw && typeof window !== 'undefined' && window.LOTTERY_PER_DRAW !== undefined) {
-        const v = parseInt(window.LOTTERY_PER_DRAW[currentPrizeIndex]);
-        prizeElement.prizePerDraw.textContent = Number.isFinite(v) && v > 0 ? String(v) : '1';
-      }
-
       lasetPrizeIndex = currentPrizeIndex;
     }
 
     if (currentPrizeIndex === 0) {
       prizeElement.prizeType.textContent = "Giải đặc biệt";
       prizeElement.prizeText.textContent = " ";
-      prizeElement.prizeLeft.textContent = "Không giới hạn";
-      prizeElement.prizePerDraw && (prizeElement.prizePerDraw.textContent = "1");
       return;
     }
 
@@ -282,7 +272,6 @@ let setPrizeData = (function () {
     let percent = (count / totalCount).toFixed(2);
     elements.bar && (elements.bar.style.width = percent * 100 + "%");
     elements.text && (elements.text.textContent = count + "/" + totalCount);
-    prizeElement.prizeLeft.textContent = count;
   };
 })();
 

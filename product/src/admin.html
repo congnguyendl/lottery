@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quản lý Quay số</title>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -513,20 +514,22 @@
                 ['NV002', 'Trần Thị B', 'Kinh doanh']
             ];
 
-            const csv = rows
-                .map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(','))
-                .join('\n');
-
-            const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8' });
-            const url = URL.createObjectURL(blob);
-
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'mau-import-nguoi-tham-gia.csv';
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-            URL.revokeObjectURL(url);
+            // Tạo workbook Excel
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.aoa_to_sheet(rows);
+            
+            // Đặt độ rộng cột
+            ws['!cols'] = [
+                { wch: 15 }, // Mã nhân viên
+                { wch: 25 }, // Họ tên
+                { wch: 20 }  // Phòng ban
+            ];
+            
+            // Thêm worksheet vào workbook
+            XLSX.utils.book_append_sheet(wb, ws, 'Danh sách người tham gia');
+            
+            // Xuất file Excel
+            XLSX.writeFile(wb, 'mau-import-nguoi-tham-gia.xlsx');
         });
 
         // Add prize

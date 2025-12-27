@@ -6,9 +6,12 @@ body {
 body {
   background: radial-gradient(1200px 600px at 18% 18%, rgba(0, 170, 184, 0.25) 0%, rgba(255, 255, 255, 0) 55%),
     linear-gradient(135deg, #F6FBFD 0%, #E7F5F8 55%, #DCEFF4 100%);
+  background-size: 200% 200%;
+  animation: gradientShift 15s ease infinite;
   margin: 0;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   overflow: hidden;
+  position: relative;
 }
 
 @keyframes gradientShift {
@@ -188,12 +191,30 @@ button {
   border-radius: 8px;
   box-shadow: 0 10px 26px rgba(0, 54, 61, 0.22);
   transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.5s;
+}
+
+button:hover::before {
+  left: 100%;
 }
 
 button:hover {
   background: linear-gradient(135deg, #12B5C2 0%, #006C77 100%);
   transform: translateY(-2px);
-  box-shadow: 0 14px 34px rgba(0, 54, 61, 0.28);
+  box-shadow: 0 14px 34px rgba(0, 54, 61, 0.28), 0 0 20px rgba(0, 170, 184, 0.4);
+  animation: buttonPulse 2s ease-in-out infinite;
 }
 
 button:active {
@@ -774,5 +795,166 @@ body.center-users.shift-users-right #container {
   100% {
     transform: scale(0.9);
     opacity: 0.8;
+  }
+}
+
+/* Hiệu ứng pháo hoa */
+.firework {
+  position: fixed;
+  width: 4px;
+  height: 4px;
+  pointer-events: none;
+  z-index: 9999;
+  transform-origin: center;
+}
+
+.firework-particle {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  will-change: transform, opacity;
+  transition: opacity 0.1s ease-out;
+}
+
+/* Hiệu ứng particles nền */
+.floating-particles {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.particle {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(0, 170, 184, 0.15);
+  pointer-events: none;
+  animation: float 20s infinite ease-in-out;
+}
+
+.particle::before {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
+  animation: sparkle 3s infinite ease-in-out;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0) translateX(0) rotate(0deg);
+    opacity: 0.3;
+  }
+  25% {
+    transform: translateY(-100px) translateX(50px) rotate(90deg);
+    opacity: 0.6;
+  }
+  50% {
+    transform: translateY(-200px) translateX(-30px) rotate(180deg);
+    opacity: 0.4;
+  }
+  75% {
+    transform: translateY(-150px) translateX(80px) rotate(270deg);
+    opacity: 0.7;
+  }
+}
+
+@keyframes sparkle {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.2);
+  }
+}
+
+@keyframes buttonPulse {
+  0%, 100% {
+    box-shadow: 0 14px 34px rgba(0, 54, 61, 0.28), 0 0 20px rgba(0, 170, 184, 0.4);
+  }
+  50% {
+    box-shadow: 0 14px 34px rgba(0, 54, 61, 0.28), 0 0 30px rgba(0, 170, 184, 0.6);
+  }
+}
+
+/* Hiệu ứng shimmer cho text */
+.shimmer {
+  background: linear-gradient(90deg, 
+    rgba(255, 255, 255, 0) 0%, 
+    rgba(255, 255, 255, 0.3) 50%, 
+    rgba(255, 255, 255, 0) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 3s infinite;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Hiệu ứng glow cho prize items */
+.prize-item.shine {
+  animation: prizeShine 3s ease-in-out infinite;
+}
+
+@keyframes prizeShine {
+  0%, 100% {
+    box-shadow: 0 0 20px 0 rgba(255, 205, 0, 0.8);
+  }
+  50% {
+    box-shadow: 0 0 35px 0 rgba(255, 205, 0, 1), 0 0 50px rgba(255, 205, 0, 0.5);
+  }
+}
+
+/* Hiệu ứng sparkles khi hover */
+.sparkle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  pointer-events: none;
+  animation: sparklePop 0.6s ease-out forwards;
+}
+
+@keyframes sparklePop {
+  0% {
+    transform: scale(0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.5) rotate(180deg);
+    opacity: 0;
+  }
+}
+
+/* Hiệu ứng smooth fade in cho elements */
+.element {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
